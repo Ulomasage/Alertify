@@ -23,6 +23,9 @@ app.use("/api/v1/user",router)
 app.use("/api/v1/user",alertRouter)
 
 
+app.get('/', (req, res) => {
+    res.send('Welcome to Alertify!');
+});
 app.listen(PORT, () => {
     console.log(`server running on PORT: ${PORT}`);
 })

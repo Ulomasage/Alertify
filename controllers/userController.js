@@ -162,7 +162,7 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "3 Minutes" }
       );
   
-      const verifyLink = `${req.protocol}://${req.get("host")}/api/v1/user/verify/${userToken}`;
+      const verifyLink = `https://alertify-9tr5.onrender.com/api/v1/user/verify/${userToken}`;
   
       // Save the user
       await user.save();
@@ -184,13 +184,14 @@ exports.registerUser = async (req, res) => {
           html: htmlContent,
         });
       }
-  
-      // Respond with success
-      res.status(201).json({
-        status: "created successfully",
-        message: `Welcome ${user.fullName} to ALERTIFY, kindly check your mail to verify your account.`,
-        data: user,
-      });
+      const Quote = ["Empower yourself with ALERTIFY, where a single tap transforms your vigilance into action. Together, we can turn awareness into safety and make our communities stronger, one alert at a time."];
+      const randomQuote = Quote[Math.floor(Math.random() * Quote.length)];
+    
+          res.status(201).json({
+              status:'created successfully',
+              message: `Welcome ${user.fullName}!,${randomQuote}. kindly check your mail to access your link to verify your account`,
+              data: user,
+          });
     } catch (error) {
       res.status(500).json({
         message: error.message,

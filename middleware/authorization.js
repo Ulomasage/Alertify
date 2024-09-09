@@ -14,7 +14,7 @@ exports.authentication = async (req, res, next) => {
       // Extract token from the authorization header (format: Bearer <token>)
       const token = auth.split(" ")[1];
       if (!token) {
-          return res.status(400).json({ message: "Invalid token" });
+          return res.status(400).json({ message: "Action requires sign-in. Please log in to continue." });
       }
 
       // Verify the token using JWT_SECRET
@@ -25,6 +25,11 @@ exports.authentication = async (req, res, next) => {
       if (!user) {
           return res.status(400).json({ message: "Authentication failed: user not found" });
       }
+      if(!user.isAdmin){
+        return res.status(403).json({
+            message:"Authentication failed: User is not allowed to access this route."
+        })
+    }
 
       // Check if the token is blacklisted (e.g., in case of logout or token expiry)
       if (user.blackList && user.blackList.includes(token)) {
@@ -63,8 +68,7 @@ exports.isAdmin = async (req, res, next) => {
       });
     }
   };
-
-
+  
   
   exports.getUserIdFromToken = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1]; // Extract token from headers
