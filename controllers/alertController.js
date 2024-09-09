@@ -71,8 +71,8 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo) {
     const message = generateDistressTemplate(user, preciseLocation, deviceInfo);
 
     // Filter emergency contacts into emails and phone numbers
-    const emailContacts = user.EmergencyContacts.filter(contact => contact.email);
-    const phoneContacts = user.EmergencyContacts.filter(contact => contact.phoneNumber);
+    const emailContacts = user.emergencyContacts.filter(contact => contact.email);
+    const phoneContacts = user.emergencyContacts.filter(contact => contact.phoneNumber);
 
     // Send email to each emergency contact with an email
     const emailPromises = emailContacts.map(contact => {

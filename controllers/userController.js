@@ -223,7 +223,7 @@ exports.registerUser = async (req, res) => {
       }
   
       // Extract emergency contact IDs
-      const contactIds = existingUser.EmergencyContacts.map(contact => contact.contactId);
+      const contactIds = existingUser.emergencyContacts.map(contact => contact.contactId);
   
       // Create JWT token with contact IDs
       const token = await jwt.sign(
@@ -304,11 +304,11 @@ exports.resendVerification = async(req,res)=>{
           return res.status(400).json({message:"user already verified"})
           }
       const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"20mins"})  
-      const verifyLink=`${req.protocol}://${req.get("host")}/api/v1/user/verify/${user._id}/${token}`   
+      const verifyLink=`https://alertify-9tr5.onrender.com/api/v1/user/verify/${user._id}/${token}`   
       let mailOptions={
           email:user.email,
           subject:"verification email",
-          html:verifyTemplate(verifyLink,user.firstname)
+          html:verifyTemplate(verifyLink,user.fullName)
       }
      await sendMail(mailOptions)
       res.status(200).json({message:"Your verification link has been sent to your email"})
@@ -336,7 +336,7 @@ exports.forgotPassword = async (req, res) => {
       const mailOptions = {
           email: user.email,
           subject: "Password Reset",
-          html: `Please click on the link to reset your password: <a href="${req.protocol}://${req.get("host")}/api/v1/user/reset-password/${resetToken}">Reset Password</a> link expires in 30 minutes`,
+          html: `Please click on the link to reset your password: <a href="https://alertify-9tr5.onrender.com/api/v1/user/reset-password/${resetToken}">Reset Password</a> link expires in 30 minutes`,
       };
       //   Send the email
       await sendMail(mailOptions);

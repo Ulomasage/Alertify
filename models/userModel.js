@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Subdocument schema for emergency contacts
-const EmergencyContactSchema = new mongoose.Schema({
+const emergencyContactsSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    EmergencyContacts: [EmergencyContactSchema],
+    emergencyContacts: [emergencyContactsSchema],
     address: {
         type: String,
         required: true,

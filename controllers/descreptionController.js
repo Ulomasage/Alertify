@@ -32,7 +32,7 @@ const submitDescription = async (req, res) => {
         `;
 
         // Iterate over merged EmergencyContacts to send emails and SMS
-        const contactPromises = user.EmergencyContacts.map(contact => {
+        const contactPromises = user.emergencyContacts.map(contact => {
             const emailPromise = sendMail({
                 email: contact.email,
                 subject: 'Distress Alert Update',
