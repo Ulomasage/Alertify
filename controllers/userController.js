@@ -110,7 +110,7 @@ exports.registerUser = async (req, res) => {
         gender,
         phoneNumber,
         confirmPassword,
-        EmergencyContacts, // Array of emergency contacts
+        emergencyContacts, // Array of emergency contacts
       } = req.body;
   
       // Check for all required fields
@@ -119,9 +119,9 @@ exports.registerUser = async (req, res) => {
       }
   
       // Emergency contacts length check
-      if (EmergencyContacts.length < 5 || EmergencyContacts.length > 10) {
-        return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
-      }
+      // if (EmergencyContacts.length < 5 || EmergencyContacts.length > 10) {
+      //   return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
+      // }
   
       // Check if the user already exists
       const existingUser = await UserModel.findOne({ email });
@@ -152,7 +152,7 @@ exports.registerUser = async (req, res) => {
         email: email.toLowerCase(),
         password: hashedPassword,
         phoneNumber,
-        EmergencyContacts: formattedContacts, // Assign contacts with custom contactId
+        emergencyContacts: formattedContacts, // Assign contacts with custom contactId
       });
   
       // Create a token for the user
@@ -175,8 +175,8 @@ exports.registerUser = async (req, res) => {
       });
   
       // Notify emergency contacts
-      for (const emergencyContact of formattedContacts) {
-        const { name, email: contactEmail } = emergencyContact;
+      for (const emergencyContacts of formattedContacts) {
+        const { name, email: contactEmail } = emergencyContacts;
         const htmlContent = emergencyContactTemplate(fullName, name); // Email template for emergency contacts
         await sendMail({
           subject: `You have been added as an emergency contact on Alertify`,

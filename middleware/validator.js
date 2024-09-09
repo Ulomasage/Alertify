@@ -2,7 +2,7 @@ const joiValidation = require("@hapi/joi");
 
 exports.signUpValidator = async (req, res, next) => {
 
-  const emergencyContactSchema = joiValidation.object({
+  const emergencyContactsSchema = joiValidation.object({
     name: joiValidation.string().required().messages({
       "any.required": "Name is required for emergency contact.",
       "string.empty": "Name cannot be an empty string.",
@@ -57,10 +57,10 @@ exports.signUpValidator = async (req, res, next) => {
       "any.required": "Phone number is required.",
       "string.pattern.base": "Phone number must be exactly 11 digits.",
     }),
-    EmergencyContacts: joiValidation.array()
+    emergencyContacts: joiValidation.array()
       .min(5)
       .max(10)
-      .items(emergencyContactSchema)
+      .items(emergencyContactsSchema)
       .required()
       .custom((value, helpers) => {
         const phoneNumbers = value.map(contact => contact.phoneNumber);
