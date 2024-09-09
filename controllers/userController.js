@@ -139,7 +139,7 @@ exports.registerUser = async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, saltedPassword);
   
       // Assign custom contactId to each emergency contact
-      const formattedContacts = EmergencyContacts.map((contact, index) => ({
+      const formattedContacts = emergencyContacts.map((contact, index) => ({
         contactId: (index + 1).toString().padStart(3, '0'), // Generates IDs like 001, 002, 003...
         ...contact,
       }));
