@@ -16,10 +16,10 @@ const emergencyContactsSchema = new mongoose.Schema({
         trim: true,
         toLowerCase: true,
     },
-    relation: {
-        type: String,
-        required: true,
-    },
+    // relation: {
+    //     type: String,
+    //     required: true,
+    // },
     contactId: {
       type: String,
       required: true,

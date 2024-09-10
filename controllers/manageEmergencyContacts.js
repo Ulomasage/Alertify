@@ -6,12 +6,12 @@ const jwt = require('jsonwebtoken');
 const addEmergencyContact = async (req, res) => {
     try {
       const userId = req.user.id || req.user._id || req.user.userId;
-      const { name, phoneNumber, email, relation } = req.body;
+      const { name, phoneNumber, email } = req.body;
   
       // Validate if all required fields are filled
-      if (!name || !phoneNumber || !email || !relation) {
+      if (!name || !phoneNumber || !email) {
         return res.status(400).json({
-          message: "Please fill all required fields: name, phone number, email, and relation.",
+          message: "Please fill all required fields: name, phone number,and email.",
         });
       }
   
@@ -66,7 +66,7 @@ const addEmergencyContact = async (req, res) => {
       }
   
       // Add new contact with the assigned contact ID
-      user.emergencyContacts.push({ name, phoneNumber, email, relation, contactId: newContactId });
+      user.emergencyContacts.push({ name, phoneNumber, email, contactId: newContactId });
       await user.save();
   
       return res.status(200).json({ message: "Emergency contact added successfully", contacts: user.emergencyContacts });
@@ -79,10 +79,10 @@ const addEmergencyContact = async (req, res) => {
   const updateEmergencyContact = async (req, res) => {
     try {
       const userId = req.user.id || req.user._id || req.user.userId;
-      const { contactId, name, phoneNumber, email, relation } = req.body;
+      const { contactId, name, phoneNumber, email,} = req.body;
   
       // Validate if contactId and at least one field to update are provided
-      if (!contactId || (!name && !phoneNumber && !email && !relation)) {
+      if (!contactId || (!name && !phoneNumber && !email)) {
         return res.status(400).json({
           message: "Please provide the contactId and at least one field to update: name, phone number, email, or relation."
         });
@@ -138,7 +138,6 @@ const addEmergencyContact = async (req, res) => {
       if (name) user.emergencyContacts[contactIndex].name = name;
       if (phoneNumber) user.emergencyContacts[contactIndex].phoneNumber = phoneNumber;
       if (email) user.emergencyContacts[contactIndex].email = email;
-      if (relation) user.emergencyContacts[contactIndex].relation = relation;
   
       await user.save();
   

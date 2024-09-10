@@ -17,10 +17,10 @@ exports.signUpValidator = async (req, res, next) => {
       "string.empty": "Email cannot be an empty string.",
       "string.email": "Invalid email format for emergency contact.",
     }),
-    relation: joiValidation.string().required().messages({
-      "any.required": "Relation is required for emergency contact.",
-      "string.empty": "Relation cannot be an empty string.",
-    }),
+    // relation: joiValidation.string().required().messages({
+    //   "any.required": "Relation is required for emergency contact.",
+    //   "string.empty": "Relation cannot be an empty string.",
+    // }),
     contactId: joiValidation.string().regex(/^\d{3}$/).messages({
       "string.pattern.base": "Contact ID must be a valid three-digit number (e.g., 001, 002).",
     }),
@@ -58,8 +58,8 @@ exports.signUpValidator = async (req, res, next) => {
       "string.pattern.base": "Phone number must be exactly 11 digits.",
     }),
     emergencyContacts: joiValidation.array()
-      .min(5)
-      .max(10)
+      // .min(5)
+      // .max(10)
       .items(emergencyContactsSchema)
       .required()
       .custom((value, helpers) => {
