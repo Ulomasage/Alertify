@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
         required: true,
     },
     profilePic:{
-        required: false
+        type: String
     },
     email: {
         type: String,
@@ -61,7 +61,10 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
     },
-    blackList:[],
+    blackList:{
+        type:Array,
+        default:[]
+    },
     isAdmin: {
         type: Boolean,
         default: false,

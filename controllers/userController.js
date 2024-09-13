@@ -349,19 +349,18 @@ exports.updateUser = async (req, res) => {
                 message:'user not found'
             });
         }
+        if (req.file && req.file.profilePic) {
+            const imagePublicId = user.profilePic.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(imagePublicId);  // Destroy old image
+          }
+          const updateResponse = await cloudinary.uploader.upload(profilePic); 
         const data = {
             fullName: fullName || user.fullName,
             address: address || user.address,
             gender: gender || user.gender,
             phoneNumber: phoneNumber || user.phoneNumber,
-            profilePic: user.profilePic
+            profilePic: updateResponse.secure_url || user.profilePic
         };
-        if (req.file && req.file.profilePic) {
-            // const imagePublicId = user.profilePic.split('/').pop().split('.')[0];
-            // await cloudinary.uploader.destroy(imagePublicId);  // Destroy old image
-            const updateResponse = await cloudinary.uploader.upload(profilePic); 
-            data.profilePic = updateResponse.secure_url;  // Update data with new image URL
-        }
         const updatedUser = await UserModel.findByIdAndUpdate(userId, data, { new: true });
         res.status(200).json({
             status:'successful',
