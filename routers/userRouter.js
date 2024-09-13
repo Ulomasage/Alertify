@@ -17,5 +17,6 @@ router.get('/one/:userId', getOneUser)
 router.get('/all',authentication,isAdmin,getAllUsers)
 router.put('/update/:userId', upload.single('profilePic'), updateUser)
 router.delete(`/remove/:userId`,authentication,isAdmin,removeUser)
+router.post('/sign-out',logOut);
 
 module.exports = router

@@ -58,6 +58,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
     },
+    blackList:[],
     isAdmin: {
         type: Boolean,
         default: false,
