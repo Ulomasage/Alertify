@@ -132,6 +132,11 @@ exports.registerUser = async (req, res) => {
   
       // Extract emergency contact IDs
       const contactIds = existingUser.emergencyContacts.map(contact => contact.contactId);
+      if(!existingUser.isVerified){
+        return res.status(400).json({
+          message:"please this email is not verified, kindly click on the link sent to your email to verify your account"
+        })
+      }
   
       // Create JWT token with contact IDs
       const token = await jwt.sign(
@@ -193,7 +198,7 @@ exports.verifyEmail = async(req,res)=>{
       await user.save()
 
       res.status(200).json({
-          message:"user verification successful", data:user
+          message:"user verification successful"
          })
 
   } catch (error) {
