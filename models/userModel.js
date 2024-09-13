@@ -48,6 +48,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    profilePic:{
+        required: false
+    },
     email: {
         type: String,
         required: true,
