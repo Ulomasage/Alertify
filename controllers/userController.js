@@ -403,7 +403,7 @@ exports.getAllUsers = async(req,res)=>{
 
 exports.removeUser = async(req,res)=>{
   try {
-      const {userId} = req.params
+      const {userId} = req.user
       const user = await UserModel.findById(userId)
       if(!user){
           res.status(404).json({
@@ -425,8 +425,8 @@ exports.removeUser = async(req,res)=>{
 
 exports.getOneUser = async (req, res) => {
   try {
-      const { userId } = req.params
-      const oneUser = await UserModel.findOne(userId);
+      const {userId} = req.user
+      const oneUser = await UserModel.findOne({userId});
       if(!oneUser){
           return res.status(404).json({
               message: 'User not found'
@@ -457,7 +457,7 @@ exports.logOut = async (req, res) => {
       // Verify the user's token and extract the user's email from the token
       const { email } = jwt.verify(token, process.env.JWT_SECRET);
       // Find the user by ID
-      const user = await UserModel.findOne({ email });
+      const user = await UserModel.findOne({email});
       if (!user) {
           return res.status(404).json({
               message: "User not found"
