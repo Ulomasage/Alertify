@@ -425,7 +425,9 @@ exports.removeUser = async(req,res)=>{
 exports.getOneUser = async (req, res) => {
   try {
       const {userId} = req.user
-      const oneUser = await UserModel.findOne({userId});
+      console.log(userId)
+      const oneUser = await UserModel.findById(userId);
+      console.log(oneUser)
       if(!oneUser){
           return res.status(404).json({
               message: 'User not found'
