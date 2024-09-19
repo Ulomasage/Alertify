@@ -91,12 +91,12 @@ exports.registerUser = async (req, res) => {
           html: htmlContent,
         });
       }
-      const Quote = ["Empower yourself with ALERTIFY, where a single tap transforms your vigilance into action. Together, we can turn awareness into safety and make our communities stronger, one alert at a time."];
+      const Quote = ["Empower yourself with ALERTIFY, where a single tap transforms your vigilance into action. Together, we can turn awareness into safety and make our communities stronger, one alert at a time."]
       const randomQuote = Quote[Math.floor(Math.random() * Quote.length)];
     
           res.status(201).json({
               status:'created successfully',
-              message: `Welcome ${user.fullName}!,${randomQuote}. kindly check your mail to access your link to verify your account`,
+              message: `Welcome ${user.fullName}!,${randomQuote}. KINDLY CHECK YOUR MAIL TO ACCESS YOUR LINK TO VERIFY YOUR ACCOUNT`,
               data: user,
           });
     } catch (error) {

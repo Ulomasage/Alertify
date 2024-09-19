@@ -197,8 +197,29 @@ const addEmergencyContact = async (req, res) => {
   };
   
 
+  const getAllEmergencyContacts = async (req,res) =>{
+    try {
+      const allContacts = await UserModel.find()
+      if(allContacts.length <=0){
+          return res.status(400).json({
+              message:"No available registered users"
+          })
+      }
+      res.status(200).json({
+          message:'List of all users in the database',
+          totalUsersRegistered:allContacts.length,
+          data:allContacts
+      })
+  } catch (error) {
+      res.status(500).json({
+        status:"server error",
+        message:error.message})
+  }
+  }
+
   module.exports={
     addEmergencyContact,
     updateEmergencyContact,
-    deleteEmergencyContact
+    deleteEmergencyContact,
+    getAllEmergencyContacts
   }
