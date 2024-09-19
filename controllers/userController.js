@@ -422,7 +422,6 @@ exports.removeUser = async(req,res)=>{
   }
 }
 
-
 exports.getOneUser = async (req, res) => {
   try {
       const {userId} = req.user
