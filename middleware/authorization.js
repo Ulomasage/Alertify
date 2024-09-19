@@ -24,11 +24,11 @@ exports.authentication = async (req, res, next) => {
       if (!user) {
           return res.status(400).json({ message: "Authentication failed: user not found" });
       }
-      if(!user.isAdmin){
-        return res.status(403).json({
-            message:"Authentication failed: User is not allowed to access this route."
-        })
-    }
+    //   if(!user.isAdmin){
+    //     return res.status(403).json({
+    //         message:"Authentication failed: User is not allowed to access this route."
+    //     })
+    // }
 
       // Check if the token is blacklisted (e.g., in case of logout or token expiry)
       if (user.blackList && user.blackList.includes(token)) {
