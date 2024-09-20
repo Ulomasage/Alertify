@@ -26,10 +26,10 @@ exports.registerUser = async (req, res) => {
         return res.status(400).json({ message: "Kindly enter all details" });
       }
   
-      // Emergency contacts length check
-      // if (EmergencyContacts.length < 5 || EmergencyContacts.length > 10) {
-      //   return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
-      // }
+      //Emergency contacts length check
+      if (emergencyContacts.length < 1 || emergencyContacts.length > 10) {
+        return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
+      }
   
       // Check if the user already exists
       const existingUser = await UserModel.findOne({ email });

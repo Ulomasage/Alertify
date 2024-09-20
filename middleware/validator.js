@@ -58,8 +58,8 @@ exports.signUpValidator = async (req, res, next) => {
       "string.pattern.base": "Phone number must be exactly 11 digits.",
     }),
     emergencyContacts: joiValidation.array()
-      // .min(5)
-      // .max(10)
+      .min(1)
+       .max(10)
       .items(emergencyContactsSchema)
       .required()
       .custom((value, helpers) => {
