@@ -308,55 +308,90 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress
 
 
 
-const triggerDistressAlert = async (req, res) => {
-    /**
-     * Triggers the distress alert and sends messages to the user's emergency contacts.
-     * 
-     * @param {Object} req - The incoming request object.
-     * @param {Object} res - The outgoing response object.
-     */
-    try {
-        // Get user ID from the token in headers
-        const userId = req.user.id || req.user._id || req.user.userId;
-        console.log("User ID from token:", userId);
+// const triggerDistressAlert = async (req, res) => {
+//     /**
+//      * Triggers the distress alert and sends messages to the user's emergency contacts.
+//      * 
+//      * @param {Object} req - The incoming request object.
+//      * @param {Object} res - The outgoing response object.
+//      */
+//     try {
+//         // Get user ID from the token in headers
+//         const userId = req.user.id || req.user._id || req.user.userId;
+//         console.log("User ID from token:", userId);
 
-        // Fetch user from the database
+//         // Fetch user from the database
+//         const user = await UserModel.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         // Get the client IP and location
+//         const clientIp = getClientIp(req);
+//         const location = await getLocation(clientIp);
+
+//         // Reverse geocode the latitude and longitude for precise location
+//         let preciseLocation = location.city === 'Localhost' || location.city === 'Unknown' 
+//             ? location.city 
+//             : await reverseGeocode(location.latitude, location.longitude);
+
+//         // Get device info (mobile/desktop)
+//         const deviceInfo = getUserAgentDetails(req);
+
+//         // Get the current timestamp when the distress alert is triggered
+//         const timestamp = new Date().toISOString();
+
+//         // Save the IP and location details to the database (optional)
+//         user.lastKnownIp = clientIp;
+//         user.lastKnownLocation = preciseLocation;
+//         await user.save();
+
+//         // Send distress messages to emergency contacts
+//         await sendDistressMessages(user, preciseLocation, deviceInfo, clientIp, location.latitude, location.longitude, timestamp);
+
+//         // Return a success response
+//         return res.status(200).json({ message: 'Distress alert triggered successfully' });
+//     } catch (error) {
+//         console.error('Error triggering distress alert:', error.message);
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// };
+
+
+const triggerDistressAlert = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id || req.user.userId;
         const user = await UserModel.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Get the client IP and location
-        const clientIp = getClientIp(req);
-        const location = await getLocation(clientIp);
+        // Get latitude and longitude from the request body
+        const { latitude, longitude } = req.body;
+        if (!latitude || !longitude) {
+            return res.status(400).json({ message: 'Location data is required.' });
+        }
 
         // Reverse geocode the latitude and longitude for precise location
-        let preciseLocation = location.city === 'Localhost' || location.city === 'Unknown' 
-            ? location.city 
-            : await reverseGeocode(location.latitude, location.longitude);
+        const preciseLocation = await reverseGeocode(latitude, longitude);
 
-        // Get device info (mobile/desktop)
+        // Get device info
         const deviceInfo = getUserAgentDetails(req);
-
-        // Get the current timestamp when the distress alert is triggered
         const timestamp = new Date().toISOString();
 
         // Save the IP and location details to the database (optional)
-        user.lastKnownIp = clientIp;
         user.lastKnownLocation = preciseLocation;
         await user.save();
 
         // Send distress messages to emergency contacts
-        await sendDistressMessages(user, preciseLocation, deviceInfo, clientIp, location.latitude, location.longitude, timestamp);
+        await sendDistressMessages(user, preciseLocation, deviceInfo, req.ip, latitude, longitude, timestamp);
 
-        // Return a success response
         return res.status(200).json({ message: 'Distress alert triggered successfully' });
     } catch (error) {
         console.error('Error triggering distress alert:', error.message);
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
 
 module.exports = {
     triggerDistressAlert,
