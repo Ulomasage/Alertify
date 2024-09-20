@@ -221,8 +221,7 @@ const signUpTemplate = (verifyLink, fullName) => {
       </html>
     `;
   };
-
-  const generateDistressTemplate = (user, preciseLocation, deviceInfo) => {
+  const generateDistressTemplate = (user, preciseLocation, deviceInfo, ipAddress, lat, lon) => {
     return `
       <!DOCTYPE html>
       <html>
@@ -234,21 +233,21 @@ const signUpTemplate = (verifyLink, fullName) => {
                   font-family: Arial, sans-serif;
                   line-height: 1.6;
                   color: #333333;
-                  background-color: #f4f4f4; /* Light grey background */
+                  background-color: #f4f4f4;
                   margin: 0;
                   padding: 0;
               }
               .container {
                   width: 80%;
-                  margin: 20px auto; /* Add some top margin */
+                  margin: 20px auto;
                   padding: 20px;
                   border: 1px solid #ddd;
                   border-radius: 10px;
                   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                  background-color: #ffffff; /* White background for the container */
+                  background-color: #ffffff;
               }
               .header {
-                  background: #ff0000; /* Red header */
+                  background: #ff0000;
                   padding: 10px;
                   text-align: center;
                   border-bottom: 1px solid #ddd;
@@ -257,10 +256,10 @@ const signUpTemplate = (verifyLink, fullName) => {
               .content {
                   padding: 20px;
                   color: #333333;
-                  background-color: #e0e0e0; /* Light grey body */
+                  background-color: #e0e0e0;
               }
               .footer {
-                  background: #333333; /* Dark grey footer */
+                  background: #333333;
                   padding: 10px;
                   text-align: center;
                   border-top: 1px solid #ddd;
@@ -284,10 +283,13 @@ const signUpTemplate = (verifyLink, fullName) => {
               </div>
               <div class="content">
                   <p>Hello,</p>
-                  <p><strong>${user.fullName}</strong> has sent a distress alert.</p>
-                  <p><strong>Location:</strong> ${preciseLocation}</p>
+                  <p><strong>${user.fullName}</strong> is in distress and needs your assistance.</p>
+                  <p><strong>IP Address:</strong> ${ipAddress}</p>
                   <p><strong>Device Information:</strong> ${deviceInfo.userAgent} (${deviceInfo.deviceType})</p>
-                  <p>Please respond to this alert immediately.</p>
+                  <p><strong>Latitude:</strong> ${lat}</p>
+                  <p><strong>Longitude:</strong> ${lon}</p>
+                  <p><strong>Precise Location:</strong> ${preciseLocation}</p>
+                  <p style="color: red; font-weight: bold;">Please respond to this alert immediately!</p>
               </div>
               <div class="footer">
                   <p>&copy; ${new Date().getFullYear()} ALERTIFY. All rights reserved.</p>
@@ -296,7 +298,8 @@ const signUpTemplate = (verifyLink, fullName) => {
       </body>
       </html>
     `;
-};
+  };
+  
   
   // Export all functions in one go
   module.exports = {
