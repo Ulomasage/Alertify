@@ -134,6 +134,7 @@
 // };
 
 
+
 const axios = require('axios');
 const useragent = require('useragent');
 const UserModel = require('../models/userModel');
@@ -201,11 +202,11 @@ function getUserAgentDetails(req) {
 }
 
 // Function to send distress messages
-async function sendDistressMessages(user, preciseLocation, deviceInfo, timestamp) {
+async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress, lat, lon, timestamp) {
     const subject = "Emergency Alert: Immediate Attention Required!";
     
-    // Generate the distress message
-    const message = generateDistressTemplate(user, preciseLocation, deviceInfo, timestamp);
+    // Use the updated HTML template for distress message
+    const htmlTemplate = generateDistressTemplate(user, preciseLocation, deviceInfo, ipAddress, lat, lon);
 
     // Filter emergency contacts into emails and phone numbers
     const emailContacts = user.emergencyContacts.filter(contact => contact.email);
@@ -216,7 +217,7 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo, timestamp
         return sendMail({
             email: contact.email,
             subject: subject,
-            html: message,
+            html: htmlTemplate, // Use the generated HTML template
         }).then(() => {
             console.log(`Email sent to ${contact.email}`);
         }).catch(error => {
@@ -275,7 +276,7 @@ const triggerDistressAlert = async (req, res) => {
         await user.save();
 
         // Send distress messages (both email and SMS)
-        await sendDistressMessages(user, preciseLocation, deviceInfo, timestamp);
+        await sendDistressMessages(user, preciseLocation, deviceInfo, clientIp, location.latitude, location.longitude, timestamp);
 
         res.json({ message: 'Distress messages sent successfully' });
     } catch (error) {
@@ -287,5 +288,3 @@ const triggerDistressAlert = async (req, res) => {
 module.exports = {
     triggerDistressAlert,
 };
-
-
