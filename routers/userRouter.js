@@ -15,7 +15,7 @@ router.post(`/change-password/:token`, changePassword)
 router.get(`/reset-password/:token`, resetPassword)
 router.get('/one', authentication, getOneUser)
 router.get('/all',authentication,isAdmin,getAllUsers)
-router.put('/update', upload.single('profilePic'), updateUser)
+router.put('/update', authentication,upload.single('profilePic'), updateUser)
 router.delete(`/remove`,authentication,isAdmin,removeUser)
 router.post('/sign-out',logOut);
 
