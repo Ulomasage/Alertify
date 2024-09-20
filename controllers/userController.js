@@ -345,7 +345,7 @@ exports.changePassword = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const { userId} = req.params;
+        const {userId} = req.user
         const { fullName,address,phoneNumber } = req.body;
         const user = await UserModel.findById(userId);
         if (!user) {
