@@ -199,7 +199,8 @@ const addEmergencyContact = async (req, res) => {
 
   const getAllEmergencyContacts = async (req,res) =>{
     try {
-      const allContacts = await UserModel.find()
+      const userId = req.user.id || req.user._id || req.user.userId;
+      const allContacts = await UserModel.find(userId)
       if(allContacts.length <=0){
           return res.status(400).json({
               message:"No available registered users"
