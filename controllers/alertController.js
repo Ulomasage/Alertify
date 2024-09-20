@@ -143,14 +143,26 @@ const twilioClient = require('../helpers/twiloConfig');
 require('dotenv').config();
 const { generateDistressTemplate } = require('../helpers/htmlTemplate');
 
-// Function to get client IP address
+//Function to get client IP address
 function getClientIp(req) {
+    /**
+     * Retrieves the client IP address from the request headers.
+     * 
+     * @param {Object} req - The incoming request object.
+     * @returns {string} The client IP address.
+     */
     const forwarded = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     return forwarded ? forwarded.split(',')[0] : req.ip;
 }
 
 // Function to get location from IP address using IP-API
 async function getLocation(ip) {
+    /**
+     * Retrieves the location information from the IP address using IP-API.
+     * 
+     * @param {string} ip - The client IP address.
+     * @returns {Object} The location information (city, region, country, latitude, longitude).
+     */
     try {
         // Fallback for localhost or private network IPs
         if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
@@ -177,6 +189,13 @@ async function getLocation(ip) {
 
 // Function to reverse geocode latitude and longitude using OpenStreetMap's Nominatim
 async function reverseGeocode(lat, lon) {
+    /**
+     * Retrieves the precise location information from the latitude and longitude using OpenStreetMap's Nominatim.
+     * 
+     * @param {number} lat - The latitude.
+     * @param {number} lon - The longitude.
+     * @returns {string} The precise location information.
+     */
     try {
         const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
         if (response.data && response.data.display_name) {
@@ -192,6 +211,12 @@ async function reverseGeocode(lat, lon) {
 
 // Function to determine if the device is mobile or desktop
 function getUserAgentDetails(req) {
+    /**
+     * Retrieves the device information (mobile or desktop) from the request headers.
+     * 
+     * @param {Object} req - The incoming request object.
+     * @returns {Object} The device information (deviceType, userAgent).
+     */
     const agent = useragent.parse(req.headers['user-agent']);
     const isMobile = agent.device.toString().toLowerCase().includes('mobile');
     const deviceType = isMobile ? 'Mobile' : 'Desktop';
@@ -203,6 +228,17 @@ function getUserAgentDetails(req) {
 
 // Function to send distress messages
 async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress, lat, lon, timestamp) {
+    /**
+     * Sends distress messages (both email and SMS) to the user's emergency contacts.
+     * 
+     * @param {Object} user - The user object.
+     * @param {string} preciseLocation - The precise location information.
+     * @param {Object} deviceInfo - The device information (deviceType, userAgent).
+     * @param {string} ipAddress - The client IP address.
+     * @param {number} lat - The latitude.
+     * @param {number} lon - The longitude.
+     * @param {string} timestamp - The current timestamp.
+     */
     const subject = "Emergency Alert: Immediate Attention Required!";
     
     // Use the updated HTML template for distress message
@@ -243,7 +279,17 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress
     await Promise.all(smsPromises);
 }
 
+
+
+
+
 const triggerDistressAlert = async (req, res) => {
+    /**
+     * Triggers the distress alert and sends messages to the user's emergency contacts.
+     * 
+     * @param {Object} req - The incoming request object.
+     * @param {Object} res - The outgoing response object.
+     */
     try {
         // Get user ID from the token in headers
         const userId = req.user.id || req.user._id || req.user.userId;
@@ -272,18 +318,20 @@ const triggerDistressAlert = async (req, res) => {
 
         // Save the IP and location details to the database (optional)
         user.lastKnownIp = clientIp;
-        user.lastKnownLocation = preciseLocation === 'Localhost' ? 'Localhost' : `${location.city}, ${location.region}, ${location.country}`;
+        user.lastKnownLocation = preciseLocation;
         await user.save();
 
-        // Send distress messages (both email and SMS)
+        // Send distress messages to emergency contacts
         await sendDistressMessages(user, preciseLocation, deviceInfo, clientIp, location.latitude, location.longitude, timestamp);
 
-        res.json({ message: 'Distress messages sent successfully' });
+        // Return a success response
+        return res.status(200).json({ message: 'Distress alert triggered successfully' });
     } catch (error) {
-        console.error("Error triggering distress alert:", error.message);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error triggering distress alert:', error.message);
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
 
 module.exports = {
     triggerDistressAlert,
