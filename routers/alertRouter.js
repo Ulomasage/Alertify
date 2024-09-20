@@ -10,7 +10,7 @@ router.post('/submit-description', getUserIdFromToken,submitDescription);
 router.post('/add-emergencyContact', getUserIdFromToken,addEmergencyContact);
 router.put('/update-contact', getUserIdFromToken,updateEmergencyContact);
 router.put('/delete-contact', getUserIdFromToken,deleteEmergencyContact);
-router.get('/all-contacts', getAllEmergencyContacts)
+router.get('/all-contacts',getUserIdFromToken, getAllEmergencyContacts)
 module.exports = router;
 
 
