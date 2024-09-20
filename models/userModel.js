@@ -48,6 +48,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    profilePic:{
+        type: String
+    },
     email: {
         type: String,
         required: true,
@@ -57,6 +60,10 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
+    },
+    blackList:{
+        type:Array,
+        default:[]
     },
     isAdmin: {
         type: Boolean,

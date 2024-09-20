@@ -19,17 +19,16 @@ exports.authentication = async (req, res, next) => {
 
       // Verify the token using JWT_SECRET
       const decodeToken = jwt.verify(token, process.env.JWT_SECRET);
-
       // Find user by ID in the decoded token
-      const user = await UserModel.findById(decodeToken.id);  // Assuming the token has the field 'id'
+      const user = await UserModel.findById(decodeToken.userId);  // Assuming the token has the field 'id'
       if (!user) {
           return res.status(400).json({ message: "Authentication failed: user not found" });
       }
-      if(!user.isAdmin){
-        return res.status(403).json({
-            message:"Authentication failed: User is not allowed to access this route."
-        })
-    }
+    //   if(!user.isAdmin){
+    //     return res.status(403).json({
+    //         message:"Authentication failed: User is not allowed to access this route."
+    //     })
+    // }
 
       // Check if the token is blacklisted (e.g., in case of logout or token expiry)
       if (user.blackList && user.blackList.includes(token)) {

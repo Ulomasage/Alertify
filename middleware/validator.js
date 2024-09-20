@@ -3,16 +3,16 @@ const joiValidation = require("@hapi/joi");
 exports.signUpValidator = async (req, res, next) => {
 
   const emergencyContactsSchema = joiValidation.object({
-    name: joiValidation.string().required().messages({
+    name: joiValidation.string().required().trim().messages({
       "any.required": "Name is required for emergency contact.",
       "string.empty": "Name cannot be an empty string.",
     }),
-    phoneNumber: joiValidation.string().required().regex(/^\d{10,11}$/).messages({
+    phoneNumber: joiValidation.string().trim().required().regex(/^\d{10,11}$/).messages({
       "any.required": "Phone number is required for emergency contact.",
       "string.empty": "Phone number cannot be an empty string.",
       "string.pattern.base": "Phone number must be a valid 10 or 11 digit number.",
     }),
-    email: joiValidation.string().email().required().messages({
+    email: joiValidation.string().email().trim().required().messages({
       "any.required": "Email is required for emergency contact.",
       "string.empty": "Email cannot be an empty string.",
       "string.email": "Invalid email format for emergency contact.",
@@ -34,7 +34,7 @@ exports.signUpValidator = async (req, res, next) => {
       "string.min": "Full name must be at least 3 characters long.",
       "string.pattern.base": "Full name cannot start or end with a whitespace.",
     }),
-    email: joiValidation.string().email().min(7).required().messages({
+    email: joiValidation.string().email().min(7).required().trim().messages({
       "any.required": "Please kindly fill your email address.",
       "string.empty": "Email cannot be empty.",
       "string.email": "Invalid email format. Please enter a valid email address.",
@@ -45,15 +45,15 @@ exports.signUpValidator = async (req, res, next) => {
     confirmPassword: joiValidation.string().required().min(8).max(50).messages({
       "string.empty": "Confirm password cannot be empty.",
     }),
-    address: joiValidation.string().required().messages({
+    address: joiValidation.string().required().trim().messages({
       "any.required": "Address is required.",
       "string.empty": "Address cannot be empty.",
     }),
-    gender: joiValidation.string().required().valid("male", "female").messages({
+    gender: joiValidation.string().required().trim().valid("male", "female").messages({
       "any.required": "Gender is required.",
       "any.only": "Gender must be either 'male' or 'female'.",
     }),
-    phoneNumber: joiValidation.string().regex(/^\d{11}$/).messages({
+    phoneNumber: joiValidation.string().trim().regex(/^\d{11}$/).messages({
       "any.required": "Phone number is required.",
       "string.pattern.base": "Phone number must be exactly 11 digits.",
     }),
@@ -80,10 +80,10 @@ exports.signUpValidator = async (req, res, next) => {
 
         return value;
       })
-      .messages({
-        "array.min": "Please enter at least 5 emergency contacts.",
-        "array.max": "Please enter at most 10 emergency contacts.",
-      }),
+      // .messages({
+      //   "array.min": "Please enter at least 5 emergency contacts.",
+      //   "array.max": "Please enter at most 10 emergency contacts.",
+      // }),
   });
 
   const { error } = Schema.validate(req.body);
@@ -97,7 +97,7 @@ exports.signUpValidator = async (req, res, next) => {
 
 exports.logInValidator = async (req, res, next) => {
   const Schema = joiValidation.object({
-    email: joiValidation.string().email().min(7).required().messages({
+    email: joiValidation.string().email().trim().min(7).required().messages({
       "any.required": "Please provide your email address.",
       "string.empty": "Email cannot be empty.",
       "string.email": "Invalid email format. Please enter a valid email address.",

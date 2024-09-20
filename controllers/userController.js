@@ -6,99 +6,6 @@ const cloudinary = require('../utils/cloudinary.js')
 const sendMail = require(`../helpers/sendMail.js`);
 const { signUpTemplate, verifyTemplate, emergencyContactTemplate } = require('../helpers/htmlTemplate.js');
 
-
-// exports.registerUser = async (req, res) => {
-//     try {
-//       const {
-//         fullName,
-//         email,
-//         password,
-//         address,
-//         gender,
-//         phoneNumber,
-//         confirmPassword,
-//         EmergencyContacts, // Now a single array for both phone numbers and emails
-//       } = req.body;
-  
-//       // Check for all required fields
-//       if (!fullName || !email || !password || !address || !gender || !phoneNumber || !confirmPassword) {
-//         return res.status(400).json({ message: "Kindly enter all details" });
-//       }
-  
-//       // Emergency contacts length check
-//       if (EmergencyContacts.length < 5 || EmergencyContacts.length > 10) {
-//         return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
-//       }
-  
-//       // Check if the user already exists
-//       const existingUser = await UserModel.findOne({ email });
-//       if (existingUser) {
-//         return res.status(400).json({ message: "User already exists" });
-//       }
-  
-//       // Check if passwords match
-//       if (confirmPassword !== password) {
-//         return res.status(400).json({ message: "Passwords do not match, kindly fill in your password correctly" });
-//       }
-  
-//       // Hash the password
-//       const saltedPassword = await bcrypt.genSalt(12);
-//       const hashedPassword = await bcrypt.hash(password, saltedPassword);
-  
-//       // Create new user
-//       const user = new UserModel({
-//         fullName,
-//         address,
-//         gender,
-//         email: email.toLowerCase(),
-//         password: hashedPassword,
-//         phoneNumber,
-//         EmergencyContacts,  
-//       });
-  
-//       // Create a token for the user
-//       const userToken = jwt.sign(
-//         { id: user._id, email: user.email },
-//         process.env.JWT_SECRET,
-//         { expiresIn: "3 Minutes" }
-//       );
-  
-//       const verifyLink = `${req.protocol}://${req.get("host")}/api/v1/user/verify/${userToken}`;
-  
-//       // Save the user
-//       await user.save();
-  
-//       // Send verification email
-//       await sendMail({
-//         subject: `Kindly Verify your mail`,
-//         email: user.email,
-//         html:signUpTemplate(verifyLink, user.fullName),
-//       });
-  
-//       // Notify emergency contacts
-//       for (const emergencyContact of EmergencyContacts) {
-//         const { name, email: contactEmail } = emergencyContact;
-//         const htmlContent = emergencyContactTemplate(fullName, name); // Email template for emergency contacts
-//         await sendMail({
-//           subject: `You have been added as an emergency contact on Alertify`,
-//           email: contactEmail,
-//           html: htmlContent,
-//         });
-//       }
-  
-//       // Respond with success
-//       res.status(201).json({
-//         status: "created successfully",
-//         message: `Welcome ${user.fullName} to ALERTIFY, kindly check your mail to verify your account.`,
-//         data: user,
-//       });
-//     } catch (error) {
-//       res.status(500).json({
-//         message: error.message,
-//       });
-//     }
-//   };
-
  
 exports.registerUser = async (req, res) => {
     try {
@@ -184,16 +91,17 @@ exports.registerUser = async (req, res) => {
           html: htmlContent,
         });
       }
-      const Quote = ["Empower yourself with ALERTIFY, where a single tap transforms your vigilance into action. Together, we can turn awareness into safety and make our communities stronger, one alert at a time."];
+      const Quote = ["Empower yourself with ALERTIFY, where a single tap transforms your vigilance into action. Together, we can turn awareness into safety and make our communities stronger, one alert at a time."]
       const randomQuote = Quote[Math.floor(Math.random() * Quote.length)];
     
           res.status(201).json({
               status:'created successfully',
-              message: `Welcome ${user.fullName}!,${randomQuote}. kindly check your mail to access your link to verify your account`,
+              message: `Welcome ${user.fullName}!,${randomQuote}. KINDLY CHECK YOUR MAIL TO ACCESS YOUR LINK TO VERIFY YOUR ACCOUNT`,
               data: user,
           });
     } catch (error) {
       res.status(500).json({
+        status:"server error",
         message: error.message,
       });
     }
@@ -224,6 +132,11 @@ exports.registerUser = async (req, res) => {
   
       // Extract emergency contact IDs
       const contactIds = existingUser.emergencyContacts.map(contact => contact.contactId);
+      if(!existingUser.isVerified){
+        return res.status(400).json({
+          message:"please this email is not verified, kindly click on the link sent to your email to verify your account"
+        })
+      }
   
       // Create JWT token with contact IDs
       const token = await jwt.sign(
@@ -245,7 +158,9 @@ exports.registerUser = async (req, res) => {
       });
   
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({
+        status:"server error",
+        message: error.message });
     }
   };
 
@@ -262,7 +177,9 @@ exports.makeAdmin = async(req,res)=>{
           message:  `${user.fullName} is now an admin`, data:user
          })
   } catch (error) {
-      res.status(500).json(error.message)
+      res.status(500).json({
+        status:"server error",
+        message:error.message})
   }
 }
 exports.verifyEmail = async(req,res)=>{
@@ -281,14 +198,16 @@ exports.verifyEmail = async(req,res)=>{
       await user.save()
 
       res.status(200).json({
-          message:"user verification successful", data:user
+          message:"user verification successful"
          })
 
   } catch (error) {
       if(error instanceof jwt.JsonWebTokenError){
           return res.status(400).json({message:"link expired"})
       }
-      res.status(500).json(error.message) 
+      res.status(500).json({
+        status:"server error",
+        message:error.message})
   }
 }
 
@@ -313,7 +232,9 @@ exports.resendVerification = async(req,res)=>{
      await sendMail(mailOptions)
       res.status(200).json({message:"Your verification link has been sent to your email"})
   } catch (error) {
-      res.status(500).json(error.message) 
+      res.status(500).json({
+        status:"server error",
+        message:error.message})
   }
 }
 
@@ -346,8 +267,8 @@ exports.forgotPassword = async (req, res) => {
       });
   } catch (error) {
       res.status(500).json({
-          message: error.message
-      });
+        status:"server error",
+        message:error.message})
   }
 };
 
@@ -378,8 +299,8 @@ exports.resetPassword = async (req, res) => {
       });
   } catch (error) {
       res.status(500).json({
-          message: error.message
-      });
+        status:"server error",
+        message:error.message});
   }
 };
 
@@ -417,15 +338,15 @@ exports.changePassword = async (req, res) => {
       });
   } catch (error) {
       res.status(500).json({
-          message: error.message
-      });
+        status:"server error",
+        message:error.message});
   }
 };
 
 exports.updateUser = async (req, res) => {
     try {
-        const { userId} = req.params;
-        const { fullName,address,gender,phoneNumber } = req.body;
+        const {userId} = req.user
+        const { fullName,address,phoneNumber } = req.body;
         const user = await UserModel.findById(userId);
         if (!user) {
             return res.status(404).json({
@@ -433,19 +354,17 @@ exports.updateUser = async (req, res) => {
                 message:'user not found'
             });
         }
-        const data = {
-            fullName: fullName || user.fullName,
-            address: address || user.address,
-            gender: gender || user.gender,
-            phoneNumber: phoneNumber || user.phoneNumber,
-            profilePic: user.profilePic
-        };
         if (req.file && req.file.profilePic) {
             const imagePublicId = user.profilePic.split('/').pop().split('.')[0];
             await cloudinary.uploader.destroy(imagePublicId);  // Destroy old image
-            const updateResponse = await cloudinary.uploader.upload(profilePic); 
-            data.profilePic = updateResponse.secure_url;  // Update data with new image URL
-        }
+          }
+          const updateResponse = await cloudinary.uploader.upload(profilePic); 
+        const data = {
+            fullName: fullName || user.fullName,
+            address: address || user.address,
+            phoneNumber: phoneNumber || user.phoneNumber,
+            profilePic: updateResponse.secure_url || user.profilePic
+        };
         const updatedUser = await UserModel.findByIdAndUpdate(userId, data, { new: true });
         res.status(200).json({
             status:'successful',
@@ -473,7 +392,9 @@ exports.getAllUsers = async(req,res)=>{
           data:allusers
       })
   } catch (error) {
-      res.status(500).json(error.message)
+      res.status(500).json({
+        status:"server error",
+        message:error.message})
   }
 }
 
@@ -481,7 +402,7 @@ exports.getAllUsers = async(req,res)=>{
 
 exports.removeUser = async(req,res)=>{
   try {
-      const {userId} = req.params
+      const {userId} = req.user
       const user = await UserModel.findById(userId)
       if(!user){
           res.status(404).json({
@@ -494,15 +415,18 @@ exports.removeUser = async(req,res)=>{
           message:'User deleted successfully',
       })
   } catch (error) {
-      res.status(500).json(error.message)
+      res.status(500).json({
+        status:"server error",
+        message:error.message})
   }
 }
 
-
 exports.getOneUser = async (req, res) => {
   try {
-      const { userId } = req.params
-      const oneUser = await UserModel.findOne(userId);
+      const {userId} = req.user
+      console.log(userId)
+      const oneUser = await UserModel.findById(userId);
+      console.log(oneUser)
       if(!oneUser){
           return res.status(404).json({
               message: 'User not found'
@@ -514,7 +438,41 @@ exports.getOneUser = async (req, res) => {
       })
   } catch (error) {
       res.status(500).json({
+        status:"server error",
+        message:error.message})
+  }
+}
+
+
+exports.logOut = async (req, res) => {
+  try {
+      const auth = req.headers.authorization;
+      const token = auth.split(' ')[1];
+
+      if(!token){
+          return res.status(401).json({
+              message: 'invalid token'
+          })
+      }
+      // Verify the user's token and extract the user's email from the token
+      const { email } = jwt.verify(token, process.env.JWT_SECRET);
+      // Find the user by ID
+      const user = await UserModel.findOne({email});
+      if (!user) {
+          return res.status(404).json({
+              message: "User not found"
+          });
+      }
+      user.blackList.push(token);
+      // Save the changes to the database
+      await user.save();
+      //   Send a success response
+      res.status(200).json({
+          message: "User logged out successfully."
+      });
+  } catch (error) {
+      res.status(500).json({
           message: error.message
-      })
+      });
   }
 }
