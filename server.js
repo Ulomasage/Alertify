@@ -13,9 +13,9 @@ const app = express();
 app.use(cors({origin: "*"}))
 
 app.use(morgan("dev"))
-app.use(fileUploader({
-    useTempFiles: true,
-}))
+// app.use(fileUploader({
+//     useTempFiles: true,
+// }))
 app.use(express.json())
 
 app.use("/api/v1/user",router)

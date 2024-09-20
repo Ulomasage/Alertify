@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs")
 const jwt = require('jsonwebtoken');
 const cloudinary = require('../utils/cloudinary.js')
 const sendMail = require(`../helpers/sendMail.js`);
+const path=require("path")
 const { signUpTemplate, verifyTemplate, emergencyContactTemplate } = require('../helpers/htmlTemplate.js');
 
  
@@ -59,6 +60,7 @@ exports.registerUser = async (req, res) => {
         email: email.toLowerCase(),
         password: hashedPassword,
         phoneNumber,
+        profilePic:null,
         emergencyContacts: formattedContacts, // Assign contacts with custom contactId
       });
   
@@ -347,6 +349,7 @@ exports.updateUser = async (req, res) => {
     try {
         const {userId} = req.user
         const { fullName,address,phoneNumber } = req.body;
+        console.log('jack')
         const user = await UserModel.findById(userId);
         if (!user) {
             return res.status(404).json({
@@ -354,17 +357,21 @@ exports.updateUser = async (req, res) => {
                 message:'user not found'
             });
         }
-        if (req.file && req.file.profilePic) {
+        console.log(user)
+        if (req.file && req.file.profilePic && user.profilePic) {
             const imagePublicId = user.profilePic.split('/').pop().split('.')[0];
             await cloudinary.uploader.destroy(imagePublicId);  // Destroy old image
           }
-          const updateResponse = await cloudinary.uploader.upload(profilePic); 
+          console.log('fada');
+          
+          const updateResponse = await cloudinary.uploader.upload(req.file.path); 
         const data = {
             fullName: fullName || user.fullName,
             address: address || user.address,
             phoneNumber: phoneNumber || user.phoneNumber,
             profilePic: updateResponse.secure_url || user.profilePic
         };
+        console.log('bisi')
         const updatedUser = await UserModel.findByIdAndUpdate(userId, data, { new: true });
         res.status(200).json({
             status:'successful',
