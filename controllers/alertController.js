@@ -134,15 +134,13 @@
 // };
 
 
-
 const axios = require('axios');
 const useragent = require('useragent');
 const UserModel = require('../models/userModel');
-const sendMail = require('../helpers/sendMail');     
-const twilioClient = require('../helpers/twiloConfig'); 
+const sendMail = require('../helpers/sendMail');
+const twilioClient = require('../helpers/twiloConfig');
 require('dotenv').config();
-// const getUserIdFromToken = require('../middleware/authorization'); // Not used in this function
-const {generateDistressTemplate} = require('../helpers/htmlTemplate');
+const { generateDistressTemplate } = require('../helpers/htmlTemplate');
 
 // Function to get client IP address
 function getClientIp(req) {
@@ -155,7 +153,7 @@ async function getLocation(ip) {
     try {
         // Fallback for localhost or private network IPs
         if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
-            return 'Localhost';
+            return { city: 'Localhost', lat: null, lon: null };
         }
 
         const response = await axios.get(`http://ip-api.com/json/${ip}?fields=city,region,country,lat,lon`);
@@ -168,20 +166,20 @@ async function getLocation(ip) {
                 longitude: response.data.lon
             };
         } else {
-            return 'Unknown location';
+            return { city: 'Unknown', lat: null, lon: null };
         }
     } catch (error) {
         console.error('Error fetching location from IP-API:', error.message);
-        return 'Unknown location';
+        return { city: 'Unknown', lat: null, lon: null };
     }
 }
 
-// Function to reverse geocode latitude and longitude to a more precise location
+// Function to reverse geocode latitude and longitude using OpenStreetMap's Nominatim
 async function reverseGeocode(lat, lon) {
     try {
-        const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${process.env.GOOGLE_API_KEY}`);
-        if (response.data && response.data.results && response.data.results.length > 0) {
-            return response.data.results[0].formatted_address;
+        const response = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+        if (response.data && response.data.display_name) {
+            return response.data.display_name;
         } else {
             return 'Unknown precise location';
         }
@@ -203,10 +201,11 @@ function getUserAgentDetails(req) {
 }
 
 // Function to send distress messages
-async function sendDistressMessages(user, preciseLocation, deviceInfo) {
+async function sendDistressMessages(user, preciseLocation, deviceInfo, timestamp) {
     const subject = "Emergency Alert: Immediate Attention Required!";
     
-    const message = generateDistressTemplate(user, preciseLocation, deviceInfo);
+    // Generate the distress message
+    const message = generateDistressTemplate(user, preciseLocation, deviceInfo, timestamp);
 
     // Filter emergency contacts into emails and phone numbers
     const emailContacts = user.emergencyContacts.filter(contact => contact.email);
@@ -244,38 +243,49 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo) {
 }
 
 const triggerDistressAlert = async (req, res) => {
-    // Get user ID from the token in headers
-    const userId = req.user.id || req.user._id || req.user.userId; 
-    console.log("User ID from token:", userId);
+    try {
+        // Get user ID from the token in headers
+        const userId = req.user.id || req.user._id || req.user.userId;
+        console.log("User ID from token:", userId);
 
-    const user = await UserModel.findById(userId);
-    if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        // Fetch user from the database
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Get the client IP and location
+        const clientIp = getClientIp(req);
+        const location = await getLocation(clientIp);
+
+        // Reverse geocode the latitude and longitude for precise location
+        let preciseLocation = location.city === 'Localhost' || location.city === 'Unknown' 
+            ? location.city 
+            : await reverseGeocode(location.latitude, location.longitude);
+
+        // Get device info (mobile/desktop)
+        const deviceInfo = getUserAgentDetails(req);
+
+        // Get the current timestamp when the distress alert is triggered
+        const timestamp = new Date().toISOString();
+
+        // Save the IP and location details to the database (optional)
+        user.lastKnownIp = clientIp;
+        user.lastKnownLocation = preciseLocation === 'Localhost' ? 'Localhost' : `${location.city}, ${location.region}, ${location.country}`;
+        await user.save();
+
+        // Send distress messages (both email and SMS)
+        await sendDistressMessages(user, preciseLocation, deviceInfo, timestamp);
+
+        res.json({ message: 'Distress messages sent successfully' });
+    } catch (error) {
+        console.error("Error triggering distress alert:", error.message);
+        res.status(500).json({ message: 'Internal server error' });
     }
-
-    const clientIp = getClientIp(req);
-    const location = await getLocation(clientIp);
-
-    // Handle precise location for public IPs
-    let preciseLocation = location === 'Localhost' ? 'Localhost' : await reverseGeocode(location.latitude, location.longitude);
-
-    // Get device info
-    const deviceInfo = getUserAgentDetails(req);
-
-    // Save the IP and location details to the database (optional)
-    user.lastKnownIp = clientIp;
-    user.lastKnownLocation = preciseLocation === 'Localhost' ? 'Localhost' : `${location.city}, ${location.region}, ${location.country}`;
-    await user.save();
-
-    // Send distress messages (both email and SMS)
-    await sendDistressMessages(user, preciseLocation, deviceInfo);
-
-    res.json({ message: 'Distress messages sent successfully' });
 };
 
 module.exports = {
     triggerDistressAlert,
 };
-
 
 
