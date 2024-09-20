@@ -223,6 +223,7 @@ const addEmergencyContact = async (req, res) => {
       res.status(500).json({ status: "server error", message: error.message });
     }
   };
+  
   module.exports={
     addEmergencyContact,
     updateEmergencyContact,
