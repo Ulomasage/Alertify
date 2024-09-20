@@ -197,27 +197,32 @@ const addEmergencyContact = async (req, res) => {
   };
   
 
-  const getAllEmergencyContacts = async (req,res) =>{
+  const getAllEmergencyContacts = async (req, res) => {
     try {
-      const userId = req.user.id || req.user._id || req.user.userId;
-      const allContacts = await UserModel.find(userId)
-      if(allContacts.length <=0){
-          return res.status(400).json({
-              message:"No available registered users"
-          })
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
+  
+      const userId = req.user.id || req.user._id || req.user.userId;
+      const user = await UserModel.findById(userId).populate('emergencyContacts');
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      const emergencyContacts = user.emergencyContacts;
+      if (emergencyContacts.length <= 0) {
+        return res.status(400).json({ message: "No emergency contacts found" });
+      }
+  
       res.status(200).json({
-          message:'List of all users in the database',
-          totalUsersRegistered:allContacts.length,
-          data:allContacts
-      })
-  } catch (error) {
-      res.status(500).json({
-        status:"server error",
-        message:error.message})
-  }
-  }
-
+        message: 'List of all emergency contacts',
+        totalEmergencyContacts: emergencyContacts.length,
+        data: emergencyContacts
+      });
+    } catch (error) {
+      res.status(500).json({ status: "server error", message: error.message });
+    }
+  };
   module.exports={
     addEmergencyContact,
     updateEmergencyContact,
