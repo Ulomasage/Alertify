@@ -179,11 +179,36 @@ async function getLocation(ip) {
                 longitude: response.data.lon
             };
         } else {
-            return { city: 'Unknown', lat: null, lon: null };
+            // If IP-API fails, use browser's geolocation API as fallback
+            return await getBrowserLocation();
         }
     } catch (error) {
         console.error('Error fetching location from IP-API:', error.message);
-        return { city: 'Unknown', lat: null, lon: null };
+        return await getBrowserLocation();
+    }
+}
+
+// Function to get browser location
+async function getBrowserLocation() {
+    try {
+        // Use browser's geolocation API to retrieve user's location
+        const position = await navigator.geolocation.getCurrentPosition();
+        return {
+            city: null,
+            region: null,
+            country: null,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        };
+    } catch (error) {
+        console.error('Error fetching location from browser:', error.message);
+        return {
+            city: 'Unknown',
+            region: 'Unknown',
+            country: 'Unknown',
+            latitude: null,
+            longitude: null
+        };
     }
 }
 
