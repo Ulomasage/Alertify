@@ -6,6 +6,7 @@ const cloudinary = require('../utils/cloudinary.js')
 const sendMail = require(`../helpers/sendMail.js`);
 const path=require("path")
 const { signUpTemplate, verifyTemplate, emergencyContactTemplate } = require('../helpers/htmlTemplate.js');
+const deactivateModel = require('../models/deativatedModel.js');
 
  
 exports.registerUser = async (req, res) => {
@@ -31,7 +32,13 @@ exports.registerUser = async (req, res) => {
         return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
       }
   
-      // Check if the user already exists
+      const deactivated = await deactivateModel.findOne({emails:email.toLowerCase()});
+      if (deactivated) {
+        return res.status(400).json({ message: "oops!! sorry, you can't use this email to sign-up" });
+      }
+      console.log(deactivated);
+
+// Check if the user already exists
       const existingUser = await UserModel.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
@@ -102,10 +109,16 @@ exports.registerUser = async (req, res) => {
               data: user,
           });
     } catch (error) {
-      res.status(500).json({
-        status:"server error",
-        message: error.message,
-      });
+      if(error.code == 11000){
+        const whatWentWrong = Object.keys(error.keyValue)[0]
+        return res.status(500).json({message:`please you can't use this ${whatWentWrong}, because it has been blocked. kindly use a different one.`})
+      }else{
+        res.status(500).json({
+          status:"server error",
+          message: error.message,
+        });
+      }
+    
     }
   };
   
@@ -184,6 +197,49 @@ exports.makeAdmin = async(req,res)=>{
         message:error.message})
   }
 }
+
+exports.deactivateUser = async (req, res) => {
+  try {
+      const{id} = req.params
+
+      const user = await UserModel.findById(id)
+      if(!user){
+        return res.status(404).json({
+          message:"user not found"
+        })
+      }
+      
+      // Check if the user is already deactivated
+      const deactivate = await deactivateModel.create({
+        emails:user.email
+      })
+      console.log(deactivate);
+      
+      if(!deactivate){
+        return res.status(400).json({
+          message:"error deactivating user... try again later"
+        })
+      }
+
+      const deleteUser = await UserModel.findByIdAndDelete(id)
+      if(!deleteUser){
+        return res.status(400).json({
+          message:"error deleting user"
+        })
+      }
+
+      res.status(200).json({
+          message: `${user.fullName} has successfully been deactivated`,
+      });
+  } catch (error) {
+      res.status(500).json({
+          status: "server error",
+          message: error.message,
+      });
+  }
+};
+
+
 exports.verifyEmail = async(req,res)=>{
   try {
      const {token} = req.params
@@ -450,36 +506,55 @@ exports.getOneUser = async (req, res) => {
   }
 }
 
-
 exports.logOut = async (req, res) => {
   try {
       const auth = req.headers.authorization;
-      const token = auth.split(' ')[1];
+      const token = auth?.split(' ')[1];
 
-      if(!token){
+      if (!token) {
           return res.status(401).json({
-              message: 'invalid token'
-          })
-      }
-      // Verify the user's token and extract the user's email from the token
-      const { email } = jwt.verify(token, process.env.JWT_SECRET);
-      // Find the user by ID
-      const user = await UserModel.findOne({email});
-      if (!user) {
-          return res.status(404).json({
-              message: "User not found"
+              message: 'Invalid token',
           });
       }
-      user.blackList.push(token);
-      // Save the changes to the database
+
+      // Verify the token and extract the user's email
+      const { email } = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await UserModel.findOne({ email });
+
+      if (!user) {
+          return res.status(404).json({
+              message: "User not found",
+          });
+      }
+
+      // Push the token with an expiration date (e.g., 15 minutes from now)
+      user.blackList.push({
+          token: token,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes expiration
+      });
+
       await user.save();
-      //   Send a success response
+
       res.status(200).json({
-          message: "User logged out successfully."
+          message: `${user.fullName}, you have logged out successfully.`,
       });
   } catch (error) {
       res.status(500).json({
-          message: error.message
+          message: error.message,
       });
   }
-}
+};
+
+// Function to cleanup expired tokens
+exports.cleanupExpiredTokens = async () => {
+  try {
+      const users = await UserModel.find();
+
+      for (const user of users) {
+          user.blackList = user.blackList.filter(item => item.expiresAt > new Date());
+          await user.save();
+      }
+  } catch (error) {
+      console.error('Error cleaning up expired tokens:', error);
+  }
+};

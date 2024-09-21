@@ -61,10 +61,10 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
     },
-    blackList:{
-        type:Array,
-        default:[]
-    },
+    blackList: [{
+        token: { type: String },
+        expiresAt: { type: Date }
+    }],
     isAdmin: {
         type: Boolean,
         default: false,
