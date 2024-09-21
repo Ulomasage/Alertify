@@ -89,3 +89,12 @@
 //       });
 //     }
 //   };
+
+// deactivate: {
+//     type: Boolean,
+//     default: false,
+// },
+// isEmailUsable: {
+//     type: Boolean,
+//     default: true,
+// },
