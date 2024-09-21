@@ -8,7 +8,7 @@ const DistressReportSchema = new mongoose.Schema({
     deviceInfo: { type: Object, required: true },
     timestamp: { type: Date, default: Date.now },
     status: { type: String, enum: ['Pending', 'Resolved'], default: 'Pending' },
-    description: { type: String } 
+    description:[ { type: String } ]
 });
 
 const DistressReport = mongoose.model('DistressReport', DistressReportSchema);

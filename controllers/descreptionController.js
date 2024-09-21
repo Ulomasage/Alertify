@@ -2,11 +2,11 @@ const DescriptionModel = require('../models/descreptionModel');
 const UserModel = require('../models/userModel');
 const sendMail = require('../helpers/sendMail');
 const twilioClient = require('../helpers/twiloConfig');
-const reportModel = require('../models/reportsModel')
+const reportModel = require('../models/reportsModel');
 
 // Function to handle description submission
 const submitDescription = async (req, res) => {
-    const userId = req.user.id || req.user._id || req.user.userId; 
+    const userId = req.user.id || req.user._id || req.user.userId;
     const { description } = req.body;
 
     try {
@@ -16,14 +16,22 @@ const submitDescription = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Save description to the database
+        // Save the description in the description collection (if needed)
         const newDescription = new DescriptionModel({
             userId: userId,
             description: description,
         });
         await newDescription.save();
 
-        
+        // Find the relevant distress report by userId
+        const distressReport = await reportModel.findOne({ userId });
+        if (!distressReport) {
+            return res.status(404).json({ message: 'Distress report not found' });
+        }
+
+        // Push the description to the description array of the distress report
+        distressReport.description.push(description);
+        await distressReport.save();
 
         // Create distress alert update message
         const message = `
@@ -34,7 +42,7 @@ const submitDescription = async (req, res) => {
             <p><b>Email:</b> ${user.email}</p>
         `;
 
-        // Iterate over merged EmergencyContacts to send emails and SMS
+        // Iterate over emergency contacts to send emails and SMS
         const contactPromises = user.emergencyContacts.map(contact => {
             const emailPromise = sendMail({
                 email: contact.email,
@@ -63,7 +71,6 @@ const submitDescription = async (req, res) => {
         await Promise.all(contactPromises);
 
         res.json({ message: 'Description submitted and distress messages updated successfully' });
-
     } catch (error) {
         console.error('Error submitting description:', error);
         res.status(500).json({ message: 'Server error' });
@@ -73,6 +80,7 @@ const submitDescription = async (req, res) => {
 module.exports = {
     submitDescription,
 };
+
 
 // // Route to get all distress reports
 // router.get('/reports', isAdmin, async (req, res) => {
