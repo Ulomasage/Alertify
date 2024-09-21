@@ -8,6 +8,7 @@ const router = require('./routers/userRouter.js')
 const alertRouter = require('./routers/alertRouter.js')
 const cron = require('node-cron')
 const { cleanupExpiredTokens } = require('./controllers/userController.js') // Adjust path as necessary
+const keepServerAlive = require('./keepServerAlive.js')
 const PORT=process.env.PORT || 5050
 
 const app = express();
@@ -33,6 +34,13 @@ cron.schedule('0 * * * *', async () => {
     await cleanupExpiredTokens; // Call your cleanup function here
 });
 
+
+keepServerAlive();
+
+
+app.get('/1', (req, res) => {
+    res.send('Server is alive!');
+});
 app.listen(PORT, () => {
     console.log(`server running on PORT: ${PORT}`);
 })

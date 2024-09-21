@@ -280,7 +280,7 @@ exports.resendVerification = async(req,res)=>{
       if(user.isVerified){
           return res.status(400).json({message:"user already verified"})
           }
-      const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"20mins"})  
+      const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"14days"})  
       const verifyLink=`https://alertify-9tr5.onrender.com/api/v1/user/verify/${user._id}/${token}`   
       let mailOptions={
           email:user.email,
@@ -309,7 +309,7 @@ exports.forgotPassword = async (req, res) => {
           });
       }
       // Generate a reset token
-      const resetToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "30m" });
+      const resetToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "30mins" });
 
       // Send reset password email
       const mailOptions = {
