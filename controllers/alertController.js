@@ -142,6 +142,7 @@ const sendMail = require('../helpers/sendMail');
 const twilioClient = require('../helpers/twiloConfig');
 require('dotenv').config();
 const { generateDistressTemplate } = require('../helpers/htmlTemplate');
+const DistressReport = require('../models/reportsModel');
 
 //Function to get client IP address
 function getClientIp(req) {
@@ -307,6 +308,58 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress
 
 
 
+const triggerDistressAlert = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id || req.user.userId;
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const { latitude, longitude, accuracy } = req.body;
+        if (!latitude || !longitude) {
+            return res.status(400).json({ message: 'Location data is required.' });
+        }
+
+        // Ensure location accuracy is sufficient (e.g., less than 30 meters)
+        if (accuracy && accuracy > 30) {
+            return res.status(400).json({ message: 'Location accuracy is too low.' });
+        }
+
+        const preciseLocation = await reverseGeocode(latitude, longitude);
+        const deviceInfo = getUserAgentDetails(req);
+        const timestamp = new Date().toISOString();
+
+        // Save the distress report to the database
+        const distressReport = new DistressReport({
+            userId: user._id,
+            preciseLocation,
+            latitude,
+            longitude,
+            deviceInfo,
+            timestamp,
+        });
+        await distressReport.save(); // Save the report
+
+        user.lastKnownLocation = preciseLocation;
+        await user.save();
+
+        await sendDistressMessages(user, preciseLocation, deviceInfo, req.ip, latitude, longitude, timestamp);
+
+        return res.status(200).json({ message: 'Distress alert triggered successfully' });
+    } catch (error) {
+        console.error('Error triggering distress alert:', error.message);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+module.exports = {
+    triggerDistressAlert,
+};
+
+
+
+
 
 // const triggerDistressAlert = async (req, res) => {
 //     /**
@@ -356,43 +409,3 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress
 //         return res.status(500).json({ message: 'Internal Server Error' });
 //     }
 // };
-
-
-const triggerDistressAlert = async (req, res) => {
-    try {
-        const userId = req.user.id || req.user._id || req.user.userId;
-        const user = await UserModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // Get latitude and longitude from the request body
-        const { latitude, longitude } = req.body;
-        if (!latitude || !longitude) {
-            return res.status(400).json({ message: 'Location data is required.' });
-        }
-
-        // Reverse geocode the latitude and longitude for precise location
-        const preciseLocation = await reverseGeocode(latitude, longitude);
-
-        // Get device info
-        const deviceInfo = getUserAgentDetails(req);
-        const timestamp = new Date().toISOString();
-
-        // Save the IP and location details to the database (optional)
-        user.lastKnownLocation = preciseLocation;
-        await user.save();
-
-        // Send distress messages to emergency contacts
-        await sendDistressMessages(user, preciseLocation, deviceInfo, req.ip, latitude, longitude, timestamp);
-
-        return res.status(200).json({ message: 'Distress alert triggered successfully' });
-    } catch (error) {
-        console.error('Error triggering distress alert:', error.message);
-        return res.status(500).json({ message: 'Internal Server Error' });
-    }
-};
-
-module.exports = {
-    triggerDistressAlert,
-};

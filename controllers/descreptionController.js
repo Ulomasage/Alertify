@@ -2,6 +2,7 @@ const DescriptionModel = require('../models/descreptionModel');
 const UserModel = require('../models/userModel');
 const sendMail = require('../helpers/sendMail');
 const twilioClient = require('../helpers/twiloConfig');
+const reportModel = require('../models/reportsModel')
 
 // Function to handle description submission
 const submitDescription = async (req, res) => {
@@ -21,6 +22,8 @@ const submitDescription = async (req, res) => {
             description: description,
         });
         await newDescription.save();
+
+        
 
         // Create distress alert update message
         const message = `
@@ -70,3 +73,16 @@ const submitDescription = async (req, res) => {
 module.exports = {
     submitDescription,
 };
+
+// // Route to get all distress reports
+// router.get('/reports', isAdmin, async (req, res) => {
+//     try {
+//         const reports = await DistressReport.find().populate('userId', 'fullName email'); // Populate user details
+//         return res.status(200).json(reports);
+//     } catch (error) {
+//         console.error('Error fetching reports:', error.message);
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// });
+
+// module.exports = router;
