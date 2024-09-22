@@ -32,7 +32,7 @@ exports.registerUser = async (req, res) => {
         return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
       }
   
-      const deactivated = await deactivateModel.findOne({emails:email.toLowerCase()});
+      const deactivated = await deactivateModel.findOne({email:email.toLowerCase()});
       if (deactivated) {
         return res.status(400).json({ message: "oops!! sorry, you can't use this email to sign-up" });
       }
@@ -75,7 +75,7 @@ exports.registerUser = async (req, res) => {
       const userToken = jwt.sign(
         { id: user._id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "3 Minutes" }
+        { expiresIn: "50 Minutes" }
       );
   
       const verifyLink = `https://alertify-9tr5.onrender.com/api/v1/user/verify/${userToken}`;
@@ -200,9 +200,9 @@ exports.makeAdmin = async(req,res)=>{
 
 exports.deactivateUser = async (req, res) => {
   try {
-    const {userId} = req.params
+    const {email} = req.body
 
-      const user = await UserModel.findById(userId)
+      const user = await UserModel.findOne({email})
       if(!user){
         return res.status(404).json({
           message:"user not found"
@@ -211,7 +211,7 @@ exports.deactivateUser = async (req, res) => {
       
       // Check if the user is already deactivated
       const deactivate = await deactivateModel.create({
-        emails:user.email
+        email:user.email
       })
       console.log(deactivate);
       
@@ -229,7 +229,7 @@ exports.deactivateUser = async (req, res) => {
       }
 
       res.status(200).json({
-          message: `${user.fullName} has successfully been deactivated`,
+          message: `The user with this ${deactivate.email} has successfully been deactivated`,
       });
   } catch (error) {
       res.status(500).json({
