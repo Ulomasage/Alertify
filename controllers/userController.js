@@ -200,7 +200,7 @@ exports.makeAdmin = async(req,res)=>{
 
 exports.deactivateUser = async (req, res) => {
   try {
-    const userId = req.user.id || req.user._id || req.user.userId
+    const {userId} = req.params
 
       const user = await UserModel.findById(userId)
       if(!user){
