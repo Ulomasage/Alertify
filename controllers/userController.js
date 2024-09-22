@@ -200,9 +200,9 @@ exports.makeAdmin = async(req,res)=>{
 
 exports.deactivateUser = async (req, res) => {
   try {
-      const{id} = req.params
+    const userId = req.user.id || req.user._id || req.user.userId
 
-      const user = await UserModel.findById(id)
+      const user = await UserModel.findById(userId)
       if(!user){
         return res.status(404).json({
           message:"user not found"
