@@ -224,6 +224,7 @@ const addEmergencyContact = async (req, res) => {
     }
   };
   
+  
   module.exports={
     addEmergencyContact,
     updateEmergencyContact,
