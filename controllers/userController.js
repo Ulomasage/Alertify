@@ -249,7 +249,7 @@ exports.verifyEmail = async (req, res) => {
       // Extract the token from the request params
       const { token } = req.params;
       // Extract the email from the verified token
-      const { email } = jwt.verify(token, process.env.jwt_secret);
+      const { email } = jwt.verify(token, process.env.JWT_SECRET);
       // Find the user with the email
       const user = await UserModel.findOne({ email:email.toLowerCase() });
       // Check if the user is still in the database
@@ -287,7 +287,7 @@ exports.resendVerificationEmail = async (req, res) => {
           return res.status(400).json({ message: "Email is required." });
       }
       // Find the user with the email
-      const user = await userModel.findOne({ email:email.toLowerCase() });
+      const user = await UserModel.findOne({ email:email.toLowerCase() });
       // Check if the user is still in the database
       if (!user) {
           return res.status(404).json({
@@ -300,12 +300,12 @@ exports.resendVerificationEmail = async (req, res) => {
           return res.redirect('https://alertify-ashy.vercel.app/#/verify')
       }
 
-      const token = jwt.sign({ email: user.email }, process.env.jwt_secret, {
+      const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
           expiresIn: "50mins"
       });
       const verifyLink = `${req.protocol}://${req.get(
           "host"
-      )}/api/v1/verify/${token}`;
+      )}/api/v1/user/verify/${token}`;
       let mailOptions = {
           email: user.email,
           subject: "Verification email",
