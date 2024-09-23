@@ -3,9 +3,10 @@ const router = express.Router();
 const alertController = require('../controllers/alertController'); 
 const { getUserIdFromToken } = require('../middleware/authorization');
 const { submitDescription } = require('../controllers/descreptionController');
-const {addEmergencyContact,updateEmergencyContact,deleteEmergencyContact, getAllEmergencyContacts, } = require('../controllers/manageEmergencyContacts')
+const {addEmergencyContact,updateEmergencyContact,deleteEmergencyContact, getAllEmergencyContacts,reportFalseAlarm } = require('../controllers/manageEmergencyContacts')
 
 router.post('/distress', getUserIdFromToken,alertController.triggerDistressAlert);
+router.post('/false-alarm', getUserIdFromToken,alertController.reportFalseAlarm);
 router.post('/submit-description', getUserIdFromToken,submitDescription);
 router.post('/add-emergencyContact', getUserIdFromToken,addEmergencyContact);
 router.put('/update-contact', getUserIdFromToken,updateEmergencyContact);

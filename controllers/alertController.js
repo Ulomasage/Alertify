@@ -582,7 +582,7 @@ const UserModel = require('../models/userModel');
 const sendMail = require('../helpers/sendMail');
 const twilioClient = require('../helpers/twiloConfig');
 require('dotenv').config();
-const { generateDistressTemplate } = require('../helpers/htmlTemplate');
+const { generateDistressTemplate,generateFalseAlarmTemplate } = require('../helpers/htmlTemplate');
 const DistressReport = require('../models/reportsModel');
 
 // Function to get client IP address
@@ -768,6 +768,53 @@ const triggerDistressAlert = async (req, res) => {
     }
 };
 
+
+const reportFalseAlarm = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id || req.user.userId;
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Function to send false alarm notifications
+        async function sendFalseAlarmMessages(user) {
+            const subject = "False Alarm: No Action Required";
+            const htmlTemplate = generateFalseAlarmTemplate(user); // Assuming you're importing this function
+
+            // Filter emergency contacts with email addresses
+            const emailContacts = user.emergencyContacts.filter(contact => contact.email);
+
+            // Send emails to the contacts
+            const emailPromises = emailContacts.map(contact => {
+                return sendMail({
+                    email: contact.email,      // Recipient's email
+                    subject: subject,          // Email subject
+                    html: htmlTemplate         // Email body (HTML)
+                }).then(() => {
+                    console.log(`False alarm email sent to ${contact.email}`);
+                }).catch(error => {
+                    console.error(`Error sending false alarm email to ${contact.email}:`, error.message);
+                });
+            });
+
+            // Wait for all emails to be sent
+            await Promise.all(emailPromises);
+
+            console.log("False alarm notifications sent.");
+        }
+
+        // Call the function to send false alarm messages
+        await sendFalseAlarmMessages(user);
+
+        // Respond with success message
+        return res.status(200).json({ message: 'False alarm notifications sent successfully.' });
+    } catch (error) {
+        console.error('Error sending false alarm notifications:', error.message);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
 module.exports = {
     triggerDistressAlert,
+    reportFalseAlarm
 };
