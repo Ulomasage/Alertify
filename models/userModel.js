@@ -61,6 +61,9 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
     },
+    // userToken:{
+    //     type: String,
+    // },
     blackList: [{
         token: { type: String },
         expiresAt: { type: Date }

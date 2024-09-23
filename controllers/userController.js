@@ -7,6 +7,7 @@ const sendMail = require(`../helpers/sendMail.js`);
 const path=require("path")
 const { signUpTemplate, verifyTemplate, emergencyContactTemplate } = require('../helpers/htmlTemplate.js');
 const deactivateModel = require('../models/deativatedModel.js');
+const { token } = require('morgan');
 
  
 exports.registerUser = async (req, res) => {
@@ -78,7 +79,7 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "50 Minutes" }
       );
   
-      const verifyLink = `https://alertify-9tr5.onrender.com/api/v1/user/verify/${userToken}`;
+      const verifyLink = `https://alertify-ashy.vercel.app/#/verify/${userToken}`;
   
       // Save the user
       await user.save();
@@ -165,6 +166,8 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "5d" }
       );
   
+      // existingUser.userToken=token
+
       // Respond with success
       res.status(200).json({
         message: `${existingUser.fullName}, you have successfully logged into your account`,
@@ -281,7 +284,7 @@ exports.resendVerification = async(req,res)=>{
           return res.status(400).json({message:"user already verified"})
           }
       const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"14days"})  
-      const verifyLink=`https://alertify-9tr5.onrender.com/api/v1/user/verify/${user._id}/${token}`   
+      const verifyLink=`https://alertify-ashy.vercel.app/#/verify/${token}`   
       let mailOptions={
           email:user.email,
           subject:"verification email",
@@ -315,7 +318,7 @@ exports.forgotPassword = async (req, res) => {
       const mailOptions = {
           email: user.email,
           subject: "Password Reset",
-          html: `Please click on the link to reset your password: <a href="https://alertify-9tr5.onrender.com/api/v1/user/reset-password/${resetToken}">Reset Password</a> link expires in 30 minutes`,
+          html: `Please click on the link to reset your password: <a href="https://alertify-ashy.vercel.app/#/reset-password">Reset Password</a> link expires in 30 minutes`,
       };
       //   Send the email
       await sendMail(mailOptions);
@@ -558,3 +561,29 @@ exports.cleanupExpiredTokens = async () => {
       console.error('Error cleaning up expired tokens:', error);
   }
 };
+
+// exports.logOut = async (req,res) =>{
+//   try {
+//     const {userId} = req.user
+//     const oneUser = await UserModel.findById(userId);
+//     console.log(oneUser);
+    
+//     if(!oneUser){
+//       return res.status(404).json({
+//           message: 'User not found'
+//       })
+//   }
+//   const updatedToken = await UserModel.findByIdAndUpdate(userId, {userToken:null}, {new:true});
+//       await oneUser.save();
+
+//       res.status(200).json({
+//           message: `${oneUser.fullName}, you have logged out successfully.`,
+//       });
+//   } catch (error) {
+//     res.status(500).json({
+//         status:'server error',
+//         errorMessage: error.message,
+//             });
+//         }
+  
+// }
