@@ -79,7 +79,9 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "50 Minutes" }
       );
   
-      const verifyLink = `https://alertify-ashy.vercel.app/#/verify/${userToken}`;
+      const verifyLink = `${req.protocol}://${req.get(
+        "host"
+    )}/api/v1/verify/${userToken}`;
   
       // Save the user
       await user.save();
@@ -253,7 +255,8 @@ exports.verifyEmail = async(req,res)=>{
       }
 
       if(user.isVerified){
-          return res.status(400).json({message:"user already verified"})
+        return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+
           }
       user.isVerified=true
       await user.save()
@@ -284,7 +287,7 @@ exports.resendVerification = async(req,res)=>{
           return res.status(400).json({message:"user already verified"})
           }
       const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"14days"})  
-      const verifyLink=`https://alertify-ashy.vercel.app/#/verify/${token}`   
+      const verifyLink=`https://alertify-ashy.vercel.app/#/verify`   
       let mailOptions={
           email:user.email,
           subject:"verification email",
