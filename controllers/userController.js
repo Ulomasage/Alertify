@@ -79,7 +79,7 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "50 Minutes" }
       );
   
-      const verifyLink = `https://alertify-ashy.vercel.app/#/verify/${userToken}`;
+      const verifyLink = `https://alertify-ashy.vercel.app/#/verify`;
   
       // Save the user
       await user.save();
@@ -258,17 +258,17 @@ exports.verifyEmail = async (req, res) => {
       }
       // Check if the user has already been verified
       if (user.isVerified) {
-          return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+          return res.send('https://alertify-ashy.vercel.app/#/verify')
       }
       // Verify the user
       user.isVerified = true;
       // Save the user data
       await user.save();
       // Send a success response
-      return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+      return res.send('https://alertify-ashy.vercel.app/#/verify')
   } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
-         return res.redirect("https://groceria-app.onrender.com//#/expired")
+         return res.send("https://alertify-ashy.vercel.app/#/expired")
       }
       res.status(500).json({
           status: "server error",
