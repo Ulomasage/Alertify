@@ -76,7 +76,7 @@ exports.registerUser = async (req, res) => {
       const userToken = jwt.sign(
         { id: user._id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "50 Minutes" }
+        { expiresIn: "1h" }
       );
   
       const verifyLink = `${req.protocol}://${req.get(
