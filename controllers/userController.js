@@ -244,63 +244,85 @@ exports.deactivateUser = async (req, res) => {
   }
 };
 
-
-exports.verifyEmail = async(req,res)=>{
+exports.verifyEmail = async (req, res) => {
   try {
-     const {token} = req.params
-     const {email}=jwt.verify(token,process.env.JWT_SECRET) 
-     const user = await UserModel.findOne({email})
-     if(!user){
-      return res.status(404).json({message:"user not found"})
+      // Extract the token from the request params
+      const { token } = req.params;
+      // Extract the email from the verified token
+      const { email } = jwt.verify(token, process.env.jwt_secret);
+      // Find the user with the email
+      const user = await UserModel.findOne({ email:email.toLowerCase() });
+      // Check if the user is still in the database
+      if (!user) {
+          return res.status(404).json({
+              message: "User not found",
+          });
+      }
+      // Check if the user has already been verified
+      if (user.isVerified) {
+          return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+      }
+      // Verify the user
+      user.isVerified = true;
+      // Save the user data
+      await user.save();
+      // Send a success response
+      return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+  } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+         return res.redirect("https://groceria-app.onrender.com//#/expired")
+      }
+      res.status(500).json({
+          status: "server error",
+          message: error.message,
+      });
+  }
+};
+
+
+exports.resendVerificationEmail = async (req, res) => {
+  try {
+      const { email } = req.body;
+      if (!email) {
+          return res.status(400).json({ message: "Email is required." });
+      }
+      // Find the user with the email
+      const user = await userModel.findOne({ email:email.toLowerCase() });
+      // Check if the user is still in the database
+      if (!user) {
+          return res.status(404).json({
+              message: "User not found."
+          });
       }
 
-      if(user.isVerified){
-        return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+      // Check if the user has already been verified
+      if (user.isVerified) {
+          return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+      }
 
-          }
-      user.isVerified=true
-      await user.save()
-
+      const token = jwt.sign({ email: user.email }, process.env.jwt_secret, {
+          expiresIn: "50mins"
+      });
+      const verifyLink = `${req.protocol}://${req.get(
+          "host"
+      )}/api/v1/verify/${token}`;
+      let mailOptions = {
+          email: user.email,
+          subject: "Verification email",
+          html: verifyTemplate(verifyLink, user.fullName),
+      };
+      // Send the the email
+      await sendMail(mailOptions);
+      // Send a success message
       res.status(200).json({
-          message:"user verification successful"
-         })
-
-  } catch (error) {
-      if(error instanceof jwt.JsonWebTokenError){
-          return res.status(400).json({message:"link expired"})
-      }
-      res.status(500).json({
-        status:"server error",
-        message:error.message})
-  }
-}
-
-exports.resendVerification = async(req,res)=>{
-  try {
-      const {email} = req.body
-      const user = await UserModel.findOne({email})
-      if(!user){
-          return res.status(400).json({message:"user does not exist"})
-      }    
-      
-      if(user.isVerified){
-          return res.status(400).json({message:"user already verified"})
-          }
-      const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"14days"})  
-      const verifyLink=`https://alertify-ashy.vercel.app/#/verify`   
-      let mailOptions={
-          email:user.email,
-          subject:"verification email",
-          html:verifyTemplate(verifyLink,user.fullName)
-      }
-     await sendMail(mailOptions)
-      res.status(200).json({message:"Your verification link has been sent to your email"})
+          message: "Verification email resent successfully.",
+      });
   } catch (error) {
       res.status(500).json({
-        status:"server error",
-        message:error.message})
+          message: error.message,
+      });
   }
-}
+};
 
 // Forgot Password
 exports.forgotPassword = async (req, res) => {
