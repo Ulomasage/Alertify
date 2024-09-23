@@ -81,7 +81,7 @@ exports.registerUser = async (req, res) => {
   
       const verifyLink = `${req.protocol}://${req.get(
         "host"
-    )}/api/v1/verify/${userToken}`;
+    )}/api/v1/user/verify/${userToken}`;
   
       // Save the user
       await user.save();
