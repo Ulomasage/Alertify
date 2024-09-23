@@ -7,6 +7,7 @@ const sendMail = require(`../helpers/sendMail.js`);
 const path=require("path")
 const { signUpTemplate, verifyTemplate, emergencyContactTemplate } = require('../helpers/htmlTemplate.js');
 const deactivateModel = require('../models/deativatedModel.js');
+const { token } = require('morgan');
 
  
 exports.registerUser = async (req, res) => {
@@ -32,7 +33,7 @@ exports.registerUser = async (req, res) => {
         return res.status(400).json({ message: "Please enter at least 5 and at most 10 emergency contacts" });
       }
   
-      const deactivated = await deactivateModel.findOne({emails:email.toLowerCase()});
+      const deactivated = await deactivateModel.findOne({email:email.toLowerCase()});
       if (deactivated) {
         return res.status(400).json({ message: "oops!! sorry, you can't use this email to sign-up" });
       }
@@ -75,10 +76,12 @@ exports.registerUser = async (req, res) => {
       const userToken = jwt.sign(
         { id: user._id, email: user.email },
         process.env.JWT_SECRET,
-        { expiresIn: "3 Minutes" }
+        { expiresIn: "1h" }
       );
   
-      const verifyLink = `https://alertify-9tr5.onrender.com/api/v1/user/verify/${userToken}`;
+      const verifyLink = `${req.protocol}://${req.get(
+        "host"
+    )}/api/v1/user/verify/${userToken}`;
   
       // Save the user
       await user.save();
@@ -165,6 +168,8 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "5d" }
       );
   
+      // existingUser.userToken=token
+
       // Respond with success
       res.status(200).json({
         message: `${existingUser.fullName}, you have successfully logged into your account`,
@@ -200,9 +205,9 @@ exports.makeAdmin = async(req,res)=>{
 
 exports.deactivateUser = async (req, res) => {
   try {
-      const{id} = req.params
+    const {email} = req.body
 
-      const user = await UserModel.findById(id)
+      const user = await UserModel.findOne({email})
       if(!user){
         return res.status(404).json({
           message:"user not found"
@@ -211,7 +216,7 @@ exports.deactivateUser = async (req, res) => {
       
       // Check if the user is already deactivated
       const deactivate = await deactivateModel.create({
-        emails:user.email
+        email:user.email
       })
       console.log(deactivate);
       
@@ -229,7 +234,7 @@ exports.deactivateUser = async (req, res) => {
       }
 
       res.status(200).json({
-          message: `${user.fullName} has successfully been deactivated`,
+          message: `The user with this ${deactivate.email} has successfully been deactivated`,
       });
   } catch (error) {
       res.status(500).json({
@@ -239,62 +244,85 @@ exports.deactivateUser = async (req, res) => {
   }
 };
 
-
-exports.verifyEmail = async(req,res)=>{
+exports.verifyEmail = async (req, res) => {
   try {
-     const {token} = req.params
-     const {email}=jwt.verify(token,process.env.JWT_SECRET) 
-     const user = await UserModel.findOne({email})
-     if(!user){
-      return res.status(404).json({message:"user not found"})
+      // Extract the token from the request params
+      const { token } = req.params;
+      // Extract the email from the verified token
+      const { email } = jwt.verify(token, process.env.JWT_SECRET);
+      // Find the user with the email
+      const user = await UserModel.findOne({ email:email.toLowerCase() });
+      // Check if the user is still in the database
+      if (!user) {
+          return res.status(404).json({
+              message: "User not found",
+          });
+      }
+      // Check if the user has already been verified
+      if (user.isVerified) {
+          return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+      }
+      // Verify the user
+      user.isVerified = true;
+      // Save the user data
+      await user.save();
+      // Send a success response
+      return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+  } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+         return res.redirect("https://alertify-ashy.vercel.app/#/expired")
+      }
+      res.status(500).json({
+          status: "server error",
+          message: error.message,
+      });
+  }
+};
+
+
+exports.resendVerificationEmail = async (req, res) => {
+  try {
+      const { email } = req.body;
+      if (!email) {
+          return res.status(400).json({ message: "Email is required." });
+      }
+      // Find the user with the email
+      const user = await UserModel.findOne({ email:email.toLowerCase() });
+      // Check if the user is still in the database
+      if (!user) {
+          return res.status(404).json({
+              message: "User not found."
+          });
       }
 
-      if(user.isVerified){
-          return res.status(400).json({message:"user already verified"})
-          }
-      user.isVerified=true
-      await user.save()
+      // Check if the user has already been verified
+      if (user.isVerified) {
+          return res.redirect('https://alertify-ashy.vercel.app/#/verify')
+      }
 
+      const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
+          expiresIn: "50mins"
+      });
+      const verifyLink = `${req.protocol}://${req.get(
+          "host"
+      )}/api/v1/user/verify/${token}`;
+      let mailOptions = {
+          email: user.email,
+          subject: "Verification email",
+          html: verifyTemplate(verifyLink, user.fullName),
+      };
+      // Send the the email
+      await sendMail(mailOptions);
+      // Send a success message
       res.status(200).json({
-          message:"user verification successful"
-         })
-
-  } catch (error) {
-      if(error instanceof jwt.JsonWebTokenError){
-          return res.status(400).json({message:"link expired"})
-      }
-      res.status(500).json({
-        status:"server error",
-        message:error.message})
-  }
-}
-
-exports.resendVerification = async(req,res)=>{
-  try {
-      const {email} = req.body
-      const user = await UserModel.findOne({email})
-      if(!user){
-          return res.status(400).json({message:"user does not exist"})
-      }    
-      
-      if(user.isVerified){
-          return res.status(400).json({message:"user already verified"})
-          }
-      const token = await jwt.sign({userId:user._id, userEmail:user.email},process.env.JWT_SECRET,{expiresIn:"14days"})  
-      const verifyLink=`https://alertify-9tr5.onrender.com/api/v1/user/verify/${user._id}/${token}`   
-      let mailOptions={
-          email:user.email,
-          subject:"verification email",
-          html:verifyTemplate(verifyLink,user.fullName)
-      }
-     await sendMail(mailOptions)
-      res.status(200).json({message:"Your verification link has been sent to your email"})
+          message: "Verification email resent successfully.",
+      });
   } catch (error) {
       res.status(500).json({
-        status:"server error",
-        message:error.message})
+          message: error.message,
+      });
   }
-}
+};
 
 // Forgot Password
 exports.forgotPassword = async (req, res) => {
@@ -315,7 +343,7 @@ exports.forgotPassword = async (req, res) => {
       const mailOptions = {
           email: user.email,
           subject: "Password Reset",
-          html: `Please click on the link to reset your password: <a href="https://alertify-9tr5.onrender.com/api/v1/user/reset-password/${resetToken}">Reset Password</a> link expires in 30 minutes`,
+          html: `Please click on the link to reset your password: <a href="https://alertify-ashy.vercel.app/#/reset-password">Reset Password</a> link expires in 30 minutes`,
       };
       //   Send the email
       await sendMail(mailOptions);
@@ -558,3 +586,29 @@ exports.cleanupExpiredTokens = async () => {
       console.error('Error cleaning up expired tokens:', error);
   }
 };
+
+// exports.logOut = async (req,res) =>{
+//   try {
+//     const {userId} = req.user
+//     const oneUser = await UserModel.findById(userId);
+//     console.log(oneUser);
+    
+//     if(!oneUser){
+//       return res.status(404).json({
+//           message: 'User not found'
+//       })
+//   }
+//   const updatedToken = await UserModel.findByIdAndUpdate(userId, {userToken:null}, {new:true});
+//       await oneUser.save();
+
+//       res.status(200).json({
+//           message: `${oneUser.fullName}, you have logged out successfully.`,
+//       });
+//   } catch (error) {
+//     res.status(500).json({
+//         status:'server error',
+//         errorMessage: error.message,
+//             });
+//         }
+  
+// }

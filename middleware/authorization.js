@@ -8,7 +8,7 @@ exports.authentication = async (req, res, next) => {
       
       // Check if the authorization header exists
       if (!auth) {
-          return res.status(401).json({ message: "See admin for authorization" });
+          return res.status(401).json({ message: "No token provided" });
       }
 
       // Extract token from the authorization header (format: Bearer <token>)

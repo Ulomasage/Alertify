@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 
 const deactivateSchema = new mongoose.Schema({
-    emails: {
+    email: {
         type: String
     }
 }, { timestamps: true });
