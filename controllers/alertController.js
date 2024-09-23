@@ -711,7 +711,64 @@ async function sendDistressMessages(user, preciseLocation, deviceInfo, ipAddress
     await Promise.all(smsPromises);
 }
 
-// Main function to trigger the distress alert
+// // Main function to trigger the distress alert
+// const triggerDistressAlert = async (req, res) => {
+//     try {
+//         const userId = req.user.id || req.user._id || req.user.userId;
+//         const user = await UserModel.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         let { latitude, longitude, accuracy } = req.body;
+
+//         // If geolocation is not available or permission is denied
+//         if (!latitude || !longitude) {
+//             console.log('Falling back to IP-based location...');
+//             const ip = getClientIp(req);
+//             const locationFallback = await getLocationFallback(ip);
+//             latitude = locationFallback.latitude;
+//             longitude = locationFallback.longitude;
+//         }
+
+//         // Check if location data is still missing after the fallback
+//         if (!latitude || !longitude) {
+//             return res.status(400).json({ message: 'Unable to retrieve location. Please try again.' });
+//         }
+
+//         // Ensure location accuracy is sufficient
+//         if (accuracy && accuracy > 30) {
+//             return res.status(400).json({ message: 'Location accuracy is too low.' });
+//         }
+
+//         const preciseLocation = await reverseGeocode(latitude, longitude);
+//         const deviceInfo = getUserAgentDetails(req);
+//         const timestamp = new Date().toISOString();
+
+//         // Save the distress report to the database
+//         const distressReport = new DistressReport({
+//             userId: user._id,
+//             preciseLocation,
+//             latitude,
+//             longitude,
+//             deviceInfo,
+//             timestamp,
+//         });
+//         await distressReport.save();
+
+//         user.lastKnownLocation = preciseLocation;
+//         await user.save();
+
+//         await sendDistressMessages(user, preciseLocation, deviceInfo, req.ip, latitude, longitude, timestamp);
+
+//         return res.status(200).json({ message: 'Distress alert triggered successfully' });
+//     } catch (error) {
+//         console.error('Error triggering distress alert:', error.message);
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// };
+
+
 const triggerDistressAlert = async (req, res) => {
     try {
         const userId = req.user.id || req.user._id || req.user.userId;
@@ -722,7 +779,7 @@ const triggerDistressAlert = async (req, res) => {
 
         let { latitude, longitude, accuracy } = req.body;
 
-        // If geolocation is not available or permission is denied
+        // If no location from frontend, use IP-based fallback
         if (!latitude || !longitude) {
             console.log('Falling back to IP-based location...');
             const ip = getClientIp(req);
@@ -731,17 +788,7 @@ const triggerDistressAlert = async (req, res) => {
             longitude = locationFallback.longitude;
         }
 
-        // Check if location data is still missing after the fallback
-        if (!latitude || !longitude) {
-            return res.status(400).json({ message: 'Unable to retrieve location. Please try again.' });
-        }
-
-        // Ensure location accuracy is sufficient
-        if (accuracy && accuracy > 30) {
-            return res.status(400).json({ message: 'Location accuracy is too low.' });
-        }
-
-        const preciseLocation = await reverseGeocode(latitude, longitude);
+        const preciseLocation = latitude && longitude ? await reverseGeocode(latitude, longitude) : 'Unknown precise location';
         const deviceInfo = getUserAgentDetails(req);
         const timestamp = new Date().toISOString();
 
@@ -759,6 +806,7 @@ const triggerDistressAlert = async (req, res) => {
         user.lastKnownLocation = preciseLocation;
         await user.save();
 
+        // Send messages even if location is not precise
         await sendDistressMessages(user, preciseLocation, deviceInfo, req.ip, latitude, longitude, timestamp);
 
         return res.status(200).json({ message: 'Distress alert triggered successfully' });
@@ -767,6 +815,7 @@ const triggerDistressAlert = async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
 
 
 const reportFalseAlarm = async (req, res) => {
