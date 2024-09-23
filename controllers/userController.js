@@ -79,9 +79,7 @@ exports.registerUser = async (req, res) => {
         { expiresIn: "50 Minutes" }
       );
   
-      const verifyLink = `${req.protocol}://${req.get(
-        "host"
-    )}/api/v1/verify/${userToken}`;
+      const verifyLink = `https://alertify-ashy.vercel.app/#/verify/${userToken}`;
   
       // Save the user
       await user.save();
