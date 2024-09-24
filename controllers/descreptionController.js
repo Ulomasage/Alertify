@@ -3,6 +3,7 @@ const UserModel = require('../models/userModel');
 const sendMail = require('../helpers/sendMail');
 const twilioClient = require('../helpers/twiloConfig');
 const reportModel = require('../models/reportsModel');
+const DistressReport = require('../models/reportsModel')
 
 // Function to handle description submission
 const submitDescription = async (req, res) => {
