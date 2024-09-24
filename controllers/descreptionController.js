@@ -88,9 +88,55 @@ const getAllReports = async (req, res) => {
         }
     };
 
+    const getResolvedReports = async (req, res) => {
+        try {
+          // Find all distress reports where the status is 'Resolved'
+          const resolvedReports = await DistressReport.find({ status: 'Resolved' }).populate('userId', 'fullName email'); // Adjust the fields populated as needed
+      
+          if (!resolvedReports.length) {
+            return res.status(404).json({ message: 'No resolved reports found' });
+          }
+      
+          return res.status(200).json(resolvedReports);
+        } catch (error) {
+          console.error('Error fetching resolved reports:', error.message);
+          return res.status(500).json({ message: 'Internal Server Error' });
+        }
+      };
+    
+
+      const resolveReport = async (req, res) => {
+        try {
+          const { reportId } = req.body; // Get the report ID from the request parameters
+      
+          // Find the report by its ID and update the status to 'Resolved'
+          const updatedReport = await DistressReport.findByIdAndUpdate(
+            reportId, // The ID of the report to update
+            { $set: { status: 'Resolved' } }, // Update operation to set status to 'Resolved'
+            { new: true } // Return the updated report after the update
+          );
+      
+          if (!updatedReport) {
+            return res.status(404).json({ message: 'Report not found' });
+          }
+      
+          return res.status(200).json({
+            message: 'Report has been resolved successfully',
+            report: updatedReport,
+          });
+        } catch (error) {
+          console.error('Error resolving report:', error.message);
+          return res.status(500).json({ message: 'Internal Server Error' });
+        }
+      };
+      
+    
+
 module.exports = {
     submitDescription,
-    getAllReports
+    getAllReports,
+    getResolvedReports,
+    resolveReport
 };
 
 
