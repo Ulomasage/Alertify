@@ -147,6 +147,12 @@ exports.registerUser = async (req, res) => {
       if (!confirmPassword) {
         return res.status(400).json({ message: "Incorrect password" });
       }
+
+      //check if the user is deactivated
+      if(user.isDeactivate = true){
+        return res.status(404).json({message:"user with this email has been deactivated"})
+       }
+      
   
       // Extract emergency contact IDs
       const contactIds = existingUser.emergencyContacts.map(contact => contact.contactId);
@@ -215,23 +221,12 @@ exports.deactivateUser = async (req, res) => {
       }
       
       // Check if the user is already deactivated
-      const deactivate = await deactivateModel.create({
-        email:user.email
-      })
-      console.log(deactivate);
+     if(user.isDeactivate = true){
+      return res.status(404).json({message:"user with this email is already deactivated"})
+     }
       
-      if(!deactivate){
-        return res.status(400).json({
-          message:"error deactivating user... try again later"
-        })
-      }
-
-      const deleteUser = await UserModel.findByIdAndDelete(id)
-      if(!deleteUser){
-        return res.status(400).json({
-          message:"error deleting user"
-        })
-      }
+     user.isDeactivate = true
+     await user.save
 
       res.status(200).json({
           message: `The user with this ${deactivate.email} has successfully been deactivated`,
@@ -572,6 +567,8 @@ exports.logOut = async (req, res) => {
       });
   }
 };
+
+
 
 // Function to cleanup expired tokens
 exports.cleanupExpiredTokens = async () => {

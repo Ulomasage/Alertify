@@ -76,6 +76,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isDeactivate: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
 const UserModel = mongoose.model('Alertify', userSchema);

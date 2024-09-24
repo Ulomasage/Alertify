@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const alertController = require('../controllers/alertController'); 
 const { getUserIdFromToken } = require('../middleware/authorization');
-const { submitDescription } = require('../controllers/descreptionController');
+const { submitDescription,getAllReports } = require('../controllers/descreptionController');
 const {addEmergencyContact,updateEmergencyContact,deleteEmergencyContact, getAllEmergencyContacts,reportFalseAlarm } = require('../controllers/manageEmergencyContacts')
 
 router.post('/distress', getUserIdFromToken,alertController.triggerDistressAlert);
@@ -12,6 +12,7 @@ router.post('/add-emergencyContact', getUserIdFromToken,addEmergencyContact);
 router.put('/update-contact', getUserIdFromToken,updateEmergencyContact);
 router.put('/delete-contact', getUserIdFromToken,deleteEmergencyContact);
 router.get('/all-contacts',getUserIdFromToken, getAllEmergencyContacts)
+router.get('/all-reports', getAllReports)
 module.exports = router;
 
 
