@@ -149,7 +149,7 @@ exports.registerUser = async (req, res) => {
       }
 
       //check if the user is deactivated
-      if(user.isDeactivate = true){
+      if(existingUser.isDeactivate = true){
         return res.status(404).json({message:"user with this email has been deactivated"})
        }
       
