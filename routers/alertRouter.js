@@ -13,8 +13,8 @@ router.post('/add-emergencyContact', getUserIdFromToken,addEmergencyContact);
 router.put('/update-contact', getUserIdFromToken,updateEmergencyContact);
 router.put('/delete-contact', getUserIdFromToken,deleteEmergencyContact);
 router.get('/all-contacts',getUserIdFromToken, getAllEmergencyContacts)
-router.get('/all-reports',isAdmin, getAllReports)
-router.get('/resolveReport',isAdmin, resolveReport)
+router.get('/all-reports', getAllReports)
+router.get('/resolveReport', resolveReport)
 module.exports = router;
 
 
